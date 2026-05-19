@@ -1,0 +1,15 @@
+{
+  "name": "zecken-tinder",
+  "version": "2.0.0",
+  "description": "Zecken-Tinder — für linksgrünversiffte Herzen ❤️",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "better-sqlite3": "^11.0.0",
+    "cors": "^2.8.5"
+  }
+}

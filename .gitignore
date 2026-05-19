@@ -1,3 +1,4 @@
 node_modules/
-.env
-*.log
+zecken.db
+zecken.db-shm
+zecken.db-wal

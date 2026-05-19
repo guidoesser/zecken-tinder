@@ -558,131 +558,10 @@
   <div class="confetti-container" id="confettiContainer"></div>
 
   <script>
-    // ─── Profile Data ───────────────────────────────────────────
-    const PROFILES = [
-      {
-        name: 'Karla',
-        age: 28,
-        location: 'Berlin-Neukölln',
-        emoji: '🎓',
-        color: '#e84118',
-        photo: 'https://i.pravatar.cc/400?u=karla@zecken-tinder.de',
-        tags: ['Soziologie', 'Klimacamp', 'Lastenrad', 'Vegan'],
-        bio: '"Das System ändern, nicht das Klima." Organisiere grad nen Riesen-Klimacamp. Such jemanden für gemeinsame Soli-Kochabende und Diskussionen über Postwachstum.'
-      },
-      {
-        name: 'Felix',
-        age: 31,
-        location: 'Leipzig',
-        emoji: '🎸',
-        color: '#2ecc71',
-        photo: 'https://i.pravatar.cc/400?u=felix@zecken-tinder.de',
-        tags: ['Kulturamt', 'Soli-Party', 'Vegan-Kochen', 'Plattenbau'],
-        bio: 'Arbeite im Kulturamt und schmeiß die besten Soli-Partys in Linden. Hab 3 externe Festplatten voller linker Musik. Such jemanden, der auch auf apokalyptische Zukunftsromane steht.'
-      },
-      {
-        name: 'Jana',
-        age: 26,
-        location: 'Hamburg-St. Pauli',
-        emoji: '🎨',
-        color: '#9b59b6',
-        photo: 'https://i.pravatar.cc/400?u=jana@zecken-tinder.de',
-        tags: ['Grafikdesign', 'Hausbesetzung', 'Demo-Plakate', 'Flinta*'],
-        bio: 'Mache Plakate für Demos und designe den nächsten Sampler. Wohne im kollektiv und such jemanden, der auch findet, dass Eigentum Diebstahl ist.'
-      },
-      {
-        name: 'Tarek',
-        age: 33,
-        location: 'Köln-Ehrenfeld',
-        emoji: '🎙️',
-        color: '#3498db',
-        photo: 'https://i.pravatar.cc/400?u=tarek@zecken-tinder.de',
-        tags: ['Journalismus', 'Freies Radio', 'Spenden sammeln', 'Kaffeehaus'],
-        bio: 'Schreib für ne linke Tageszeitung und mach Radio auf FreeFM. Such jemanden für lange Nächte im Café討論 über Gramsci und wer grad die beste Falafel in Ehrenfeld hat.'
-      },
-      {
-        name: 'Lotta',
-        age: 24,
-        location: 'Freiburg',
-        emoji: '🚲',
-        color: '#f1c40f',
-        photo: 'https://i.pravatar.cc/400?u=lotta@zecken-tinder.de',
-        tags: ['"Ich mach BWL nur fürs System"', 'Fahrrad', 'CSD-Orga', 'Zero Waste'],
-        bio: '"BWL-Studentin — aber nur um das System von innen zu verändern!" Fahre Fahrrad (ohne Helm, aus Prinzip). Organisiere den CSD in Freiburg mit.'
-      },
-      {
-        name: 'Benno',
-        age: 29,
-        location: 'Jena',
-        emoji: '💻',
-        color: '#e74c3c',
-        photo: 'https://i.pravatar.cc/400?u=benno@zecken-tinder.de',
-        tags: ['Informatik', 'Antifa', 'Matrix-Server', 'Verschlüsselung'],
-        bio: 'Hacke für die Antifa und betreibe einen eigenen Matrix-Server. Such jemanden, der Signal installiert hat und weiss, was ein PAHE ist. Kiffe nicht, hab aber nix dagegen.'
-      },
-      {
-        name: 'Marie',
-        age: 27,
-        location: 'Dresden',
-        emoji: '🐱',
-        color: '#e67e22',
-        photo: 'https://i.pravatar.cc/400?u=marie@zecken-tinder.de',
-        tags: ['Pflege', 'Kundgebungen', '4 Katzen', 'Strickkreis'],
-        bio: 'Arbeite in der Pflege und organisier Kundgebungen gegen rechts. Hab 4 Katzen (alle gerettet). Such jemanden, der sonntags mit mir in den Strickkreis kommt.'
-      },
-      {
-        name: 'Can',
-        age: 30,
-        location: 'München',
-        emoji: '🌯',
-        color: '#1abc9c',
-        photo: 'https://i.pravatar.cc/400?u=can@zecken-tinder.de',
-        tags: ['Jura', 'NGO', 'Vegane Döner-Bowl', 'Theorie'],
-        bio: 'Mach Jura für ne NGO — Prozesskostenhilfe und Asylrecht. Koch die beste vegane Döner-Bowl der Stadt. Such jemanden, der Bock hat abends mal über Staatstheorie zu diskutieren.'
-      },
-      {
-        name: 'Fine',
-        age: 25,
-        location: 'Hannover',
-        emoji: '🎵',
-        color: '#e84393',
-        photo: 'https://i.pravatar.cc/400?u=fine@zecken-tinder.de',
-        tags: ['Veranstaltungstechnik', 'Soli-Konzerte', 'Punk', 'Kabelmanagement'],
-        bio: 'Schmeiß die besten Soli-Konzerte im UJZ. Hab n Kabelmanagement, von dem Benno nur träumen kann. Such jemanden zum Moshpitten und danach Tee trinken.'
-      },
-      {
-        name: 'Ole',
-        age: 32,
-        location: 'Bremen',
-        emoji: '🪚',
-        color: '#00b894',
-        photo: 'https://i.pravatar.cc/400?u=ole@zecken-tinder.de',
-        tags: ['Tischler', 'Kollektiv-Werkstatt', 'Mobile Bühnen', 'Permakultur'],
-        bio: 'Tischler in ner kollektiv betriebenen Werkstatt. Bau mobile Bühnen für Demos und grad nen Tiny House. Such jemanden für gemeinsame Projekte und Permakultur-Wochenenden.'
-      },
-      {
-        name: 'Svenja',
-        age: 29,
-        location: 'Münster',
-        emoji: '📚',
-        color: '#fd79a8',
-        photo: 'https://i.pravatar.cc/400?u=svenja@zecken-tinder.de',
-        tags: ['Verlag', 'Lektorat', 'Antirassismus', 'Buchmesse'],
-        bio: 'Lektorin in nem linken Verlag. Korrekturlese Flugblätter gratis. Such jemanden, der auf der Buchmesse mit mir anstellt und über Verteilungsgerechtigkeit diskutiert.'
-      },
-      {
-        name: 'Nick',
-        age: 27,
-        location: 'Kassel',
-        emoji: '🎭',
-        color: '#6c5ce7',
-        photo: 'https://i.pravatar.cc/400?u=nick@zecken-tinder.de',
-        tags: ['Theater', 'postmigrantisch', 'Impro', 'Kulturschaffend'],
-        bio: 'Mache postmigrantisches Theater und Impro-Shows. Organisiere die nächste Kulturwoche. Such jemanden, der mit mir über nasses vs idealistischen Materialismus streitet — und dann lachen kann.'
-      }
-    ];
-
+    // ─── State ───────────────────────────────────────────────────
+    let PROFILES = [];
     let currentIndex = 0;
+    let totalProfiles = 0;
     let matches = 0;
     let nopes = 0;
     let likes = 0;
@@ -690,18 +569,32 @@
     let isAnimating = false;
     let swipeState = null;
 
-    // ─── Init ───────────────────────────────────────────────────
-    function init() {
-      renderCards();
-      updateStats();
+    // ─── API Helpers ─────────────────────────────────────────────
+    async function apiGet(url) {
+      const r = await fetch(url);
+      return r.json();
+    }
+    async function apiPost(url, body) {
+      await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     }
 
-    function shuffleArray(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
+    // ─── Init ───────────────────────────────────────────────────
+    async function init() {
+      const data = await apiGet('/api/profiles');
+      PROFILES = data.profiles;
+      currentIndex = data.currentIndex;
+      totalProfiles = data.total;
+      await loadStats();
+      renderCards();
+    }
+
+    async function loadStats() {
+      const stats = await apiGet('/api/stats');
+      likes = stats.likes;
+      nopes = stats.nopes;
+      matches = stats.matchedProfiles.length;
+      matchedProfiles = stats.matchedProfiles;
+      updateStats();
     }
 
     // ─── Render Cards ────────────────────────────────────────────
@@ -711,7 +604,7 @@
       const empty = document.getElementById('emptyState');
       const actions = document.getElementById('actions');
 
-      if (currentIndex >= PROFILES.length) {
+      if (currentIndex >= totalProfiles) {
         deck.innerHTML = '';
         empty.classList.add('show');
         actions.style.display = 'none';
@@ -735,7 +628,6 @@
     function createCardElement(profile, className) {
       const div = document.createElement('div');
       div.className = `card ${className}`;
-      div.dataset.index = PROFILES.indexOf(profile);
 
       div.innerHTML = `
         <div class="card-avatar" style="background-image: url('${profile.photo}'); background-size: cover; background-position: center;">
@@ -770,11 +662,7 @@
     function setupDrag() {
       const card = document.querySelector('.card.current');
       if (!card) return;
-
-      // Cleanup any leftover listeners from previous rounds
       cleanupDrag();
-
-      // Use Pointer Events if supported, otherwise Touch
       if (window.PointerEvent) {
         card.addEventListener('pointerdown', onDragStart, { passive: true });
       } else {
@@ -803,16 +691,12 @@
     function onDragStart(e) {
       if (isAnimating) return;
       cleanupDrag();
-
       const card = e.currentTarget;
       if (!card) return;
-
       const point = e.touches ? e.touches[0] : e;
       if (!point) return;
-
       swipeState = { card, startX: point.clientX, startY: point.clientY };
       card.classList.add('dragging');
-
       if (window.PointerEvent) {
         _onMove = (ev) => { ev.preventDefault(); onDragMove(ev, null); };
         _onEnd = (ev) => onDragEnd(ev);
@@ -832,14 +716,10 @@
       const dx = point.clientX - swipeState.startX;
       const dy = point.clientY - swipeState.startY;
       const rotate = dx * 0.08;
-
       swipeState.card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`;
-
-      // Show indicators — left = match (❤️), right = nope (💩)
       const indLike = swipeState.card.querySelector('.swipe-indicator.like');
       const indNope = swipeState.card.querySelector('.swipe-indicator.nope');
       const threshold = 80;
-
       if (dx < -threshold) {
         indLike?.classList.add('show');
         indNope?.classList.remove('show');
@@ -854,17 +734,12 @@
 
     function onDragEnd(e) {
       if (!swipeState) return;
-
       const card = swipeState.card;
       card.classList.remove('dragging');
-
-      // Get end position
       const point = e.changedTouches ? e.changedTouches[0] : e;
       const dx = point ? point.clientX - swipeState.startX : 0;
       const threshold = 100;
-
       cleanupDrag();
-
       if (dx < -threshold) {
         animateSwipe(card, 'left', 'like');
       } else if (dx > threshold) {
@@ -881,7 +756,6 @@
       if (isAnimating) return;
       const card = document.querySelector('.card.current');
       if (!card) return;
-
       if (type === 'like') animateSwipe(card, 'left', 'like');
       else if (type === 'nope') animateSwipe(card, 'right', 'nope');
       else if (type === 'super') animateSwipe(card, 'up', 'super');
@@ -900,26 +774,18 @@
       card.style.transform = `translate(${x}px, ${y}px) rotate(${rotate}deg)`;
       card.style.opacity = '0';
 
-      // Handle result
-      setTimeout(() => {
-        if (type === 'like') {
-          likes++;
-          matches++;
-          matchedProfiles.push(PROFILES[currentIndex]);
-          showMatch(PROFILES[currentIndex]);
-          spawnConfetti();
-        } else if (type === 'nope') {
-          nopes++;
-        } else if (type === 'super') {
-          likes++;
-          matches++;
-          matchedProfiles.push(PROFILES[currentIndex]);
-          showMatch(PROFILES[currentIndex]);
+      const profileIdx = currentIndex;
+
+      setTimeout(async () => {
+        await apiPost('/api/swipe', { profileIdx, type });
+
+        if (type === 'like' || type === 'super') {
+          showMatch(PROFILES[profileIdx]);
           spawnConfetti();
         }
 
         currentIndex++;
-        updateStats();
+        await loadStats();
         renderCards();
         isAnimating = false;
       }, 400);
@@ -939,7 +805,6 @@
     function spawnConfetti() {
       const container = document.getElementById('confettiContainer');
       const colors = ['#e84118', '#2ecc71', '#3498db', '#f1c40f', '#9b59b6', '#e84393', '#1abc9c', '#fd79a8'];
-
       for (let i = 0; i < 80; i++) {
         const el = document.createElement('div');
         el.className = 'confetti';
@@ -952,30 +817,21 @@
         el.style.animationDuration = (Math.random() * 2 + 2) + 's';
         el.style.animationDelay = Math.random() * 0.5 + 's';
         container.appendChild(el);
-
         setTimeout(() => el.remove(), 4000);
       }
     }
 
     // ─── Stats ──────────────────────────────────────────────────
     function updateStats() {
-      document.getElementById('matchedCount').textContent = matches;
+      document.getElementById('matchedCount').textContent = matchedProfiles.length;
       document.getElementById('nopeCount').textContent = nopes;
       document.getElementById('likeCount').textContent = likes;
     }
 
     // ─── Reset ──────────────────────────────────────────────────
-    function resetAll() {
-      currentIndex = 0;
-      matches = 0;
-      nopes = 0;
-      likes = 0;
-      matchedProfiles = [];
-      shuffleArray(PROFILES);
-      updateStats();
-      renderCards();
-
-      // Scroll to top
+    async function resetAll() {
+      await apiPost('/api/reset', {});
+      await init();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -987,7 +843,6 @@
     });
 
     // ─── Go! ────────────────────────────────────────────────────
-    shuffleArray(PROFILES);
     init();
   </script>
 </body>

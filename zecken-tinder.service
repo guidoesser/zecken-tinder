@@ -1,0 +1,16 @@
+[Unit]
+Description=Zecken-Tinder — für linksgrünversiffte Herzen ❤️
+After=network.target
+
+[Service]
+Type=simple
+User=hermesuser
+WorkingDirectory=/home/hermesuser/projects/zecken-tinder
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=3001
+
+[Install]
+WantedBy=multi-user.target
