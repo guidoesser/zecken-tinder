@@ -292,8 +292,8 @@
       user-select: none;
     }
 
-    .swipe-hint .hint-left { color: rgba(46, 204, 113, 0.4); }
-    .swipe-hint .hint-right { color: rgba(231, 76, 60, 0.4); }
+    .swipe-hint .hint-left { color: rgba(255,255,255,0.2); }
+    .swipe-hint .hint-right { color: rgba(231, 76, 60, 0.5); }
 
     /* Action buttons */
     .actions {
@@ -727,8 +727,8 @@
           </div>
           <div class="card-bio">${profile.bio}</div>
           <div class="swipe-hint">
-            <span class="hint-left">👈 ❤️ Match</span>
-            <span class="hint-right">Nope 👉</span>
+            <span class="hint-left">👈 Nope</span>
+            <span class="hint-right">❤️ Match 👉</span>
           </div>
         </div>
       `;
@@ -805,15 +805,15 @@
 
       swipeState.card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`;
 
-      // Show indicators — left = match, right = nope
+      // Show indicators — right = match, left = nope
       const indLike = swipeState.card.querySelector('.swipe-indicator.like');
       const indNope = swipeState.card.querySelector('.swipe-indicator.nope');
       const threshold = 80;
 
-      if (dx > threshold) {
+      if (dx < -threshold) {
         indNope?.classList.add('show');
         indLike?.classList.remove('show');
-      } else if (dx < -threshold) {
+      } else if (dx > threshold) {
         indLike?.classList.add('show');
         indNope?.classList.remove('show');
       } else {
@@ -836,9 +836,9 @@
       cleanupDrag();
 
       if (dx < -threshold) {
-        animateSwipe(card, 'left', 'like');
+        animateSwipe(card, 'left', 'nope');
       } else if (dx > threshold) {
-        animateSwipe(card, 'right', 'nope');
+        animateSwipe(card, 'right', 'like');
       } else {
         card.style.transform = '';
         card.querySelector('.swipe-indicator.nope')?.classList.remove('show');
@@ -852,8 +852,8 @@
       const card = document.querySelector('.card.current');
       if (!card) return;
 
-      if (type === 'like') animateSwipe(card, 'left', 'like');
-      else if (type === 'nope') animateSwipe(card, 'right', 'nope');
+      if (type === 'like') animateSwipe(card, 'right', 'like');
+      else if (type === 'nope') animateSwipe(card, 'left', 'nope');
       else if (type === 'super') animateSwipe(card, 'up', 'super');
     }
 
@@ -957,8 +957,8 @@
 
     // ─── Keyboard shortcuts ─────────────────────────────────────
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') swipe('like');
-      if (e.key === 'ArrowRight') swipe('nope');
+      if (e.key === 'ArrowLeft') swipe('nope');
+      if (e.key === 'ArrowRight') swipe('like');
       if (e.key === 'ArrowUp') swipe('super');
     });
 
