@@ -811,11 +811,11 @@
       const threshold = 80;
 
       if (dx < -threshold) {
-        indLike?.classList.add('show');
-        indNope?.classList.remove('show');
-      } else if (dx > threshold) {
         indNope?.classList.add('show');
         indLike?.classList.remove('show');
+      } else if (dx > threshold) {
+        indLike?.classList.add('show');
+        indNope?.classList.remove('show');
       } else {
         indLike?.classList.remove('show');
         indNope?.classList.remove('show');
@@ -836,9 +836,9 @@
       cleanupDrag();
 
       if (dx < -threshold) {
-        animateSwipe(card, 'left', 'like');
+        animateSwipe(card, 'left', 'nope');
       } else if (dx > threshold) {
-        animateSwipe(card, 'right', 'nope');
+        animateSwipe(card, 'right', 'like');
       } else {
         card.style.transform = '';
         card.querySelector('.swipe-indicator.nope')?.classList.remove('show');
@@ -852,8 +852,8 @@
       const card = document.querySelector('.card.current');
       if (!card) return;
 
-      if (type === 'like') animateSwipe(card, 'left', 'like');
-      else if (type === 'nope') animateSwipe(card, 'right', 'nope');
+      if (type === 'like') animateSwipe(card, 'right', 'like');
+      else if (type === 'nope') animateSwipe(card, 'left', 'nope');
       else if (type === 'super') animateSwipe(card, 'up', 'super');
     }
 
