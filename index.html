@@ -874,24 +874,18 @@
       setTimeout(() => {
         if (type === 'like') {
           likes++;
-          // 40% chance of match on like
-          if (Math.random() < 0.4) {
-            matches++;
-            matchedProfiles.push(PROFILES[currentIndex]);
-            showMatch(PROFILES[currentIndex]);
-            spawnConfetti();
-          }
+          matches++;
+          matchedProfiles.push(PROFILES[currentIndex]);
+          showMatch(PROFILES[currentIndex]);
+          spawnConfetti();
         } else if (type === 'nope') {
           nopes++;
         } else if (type === 'super') {
           likes++;
-          // 70% chance on super like
-          if (Math.random() < 0.7) {
-            matches++;
-            matchedProfiles.push(PROFILES[currentIndex]);
-            showMatch(PROFILES[currentIndex]);
-            spawnConfetti();
-          }
+          matches++;
+          matchedProfiles.push(PROFILES[currentIndex]);
+          showMatch(PROFILES[currentIndex]);
+          spawnConfetti();
         }
 
         currentIndex++;
