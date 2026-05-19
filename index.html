@@ -194,8 +194,8 @@
 
     .swipe-indicator.like {
       left: 24px;
-      color: #2ecc71;
-      border-color: #2ecc71;
+      color: #e74c3c;
+      border-color: #e74c3c;
     }
 
     .card.current .swipe-indicator.show {
@@ -324,11 +324,11 @@
     .action-btn:hover { transform: scale(1.1); }
     .action-btn:active { transform: scale(0.95); }
 
-    .action-btn.nope { color: #e74c3c; }
-    .action-btn.nope:hover { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
+    .action-btn.like { color: #e74c3c; }
+    .action-btn.like:hover { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
 
-    .action-btn.like { color: #2ecc71; }
-    .action-btn.like:hover { background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; }
+    .action-btn.nope { color: rgba(255,255,255,0.3); }
+    .action-btn.nope:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
 
     .action-btn.super { color: #3498db; font-size: 24px; }
     .action-btn.super:hover { background: rgba(52, 152, 219, 0.2); border-color: #3498db; }
@@ -516,16 +516,16 @@
 
     <!-- Action Buttons -->
     <div class="actions" id="actions">
-      <button class="action-btn nope" onclick="swipe('nope')">✕</button>
+      <button class="action-btn like" onclick="swipe('like')">❤️</button>
       <button class="action-btn super" onclick="swipe('super')">⭐</button>
-      <button class="action-btn like" onclick="swipe('like')">💚</button>
+      <button class="action-btn nope" onclick="swipe('nope')">✕</button>
     </div>
   </div>
 
   <!-- Match Overlay -->
   <div class="match-overlay" id="matchOverlay">
     <div class="match-content">
-      <div class="match-icon">💚</div>
+      <div class="match-icon">❤️</div>
       <h2>ES HAT GEFUNKT! 🔥</h2>
       <p id="matchText">Du und <span id="matchName"></span> — das wird was!</p>
       <div>
@@ -711,7 +711,7 @@
           <div class="avatar-gradient" style="background: radial-gradient(circle at 50% 100%, ${profile.color}22, transparent);"></div>
           <span class="emoji-bg">${profile.emoji}</span>
           <div class="swipe-indicator nope">✕ NOPE</div>
-          <div class="swipe-indicator like">💚 MATCH</div>
+          <div class="swipe-indicator like">❤️ MATCH</div>
         </div>
         <div class="card-info">
           <div class="card-name-age">
@@ -727,7 +727,7 @@
           </div>
           <div class="card-bio">${profile.bio}</div>
           <div class="swipe-hint">
-            <span class="hint-left">👈 Match</span>
+            <span class="hint-left">👈 ❤️ Match</span>
             <span class="hint-right">Nope 👉</span>
           </div>
         </div>
@@ -810,10 +810,10 @@
       const indNope = swipeState.card.querySelector('.swipe-indicator.nope');
       const threshold = 80;
 
-      if (dx < -threshold) {
+      if (dx > threshold) {
         indNope?.classList.add('show');
         indLike?.classList.remove('show');
-      } else if (dx > threshold) {
+      } else if (dx < -threshold) {
         indLike?.classList.add('show');
         indNope?.classList.remove('show');
       } else {
@@ -836,9 +836,9 @@
       cleanupDrag();
 
       if (dx < -threshold) {
-        animateSwipe(card, 'left', 'nope');
+        animateSwipe(card, 'left', 'like');
       } else if (dx > threshold) {
-        animateSwipe(card, 'right', 'like');
+        animateSwipe(card, 'right', 'nope');
       } else {
         card.style.transform = '';
         card.querySelector('.swipe-indicator.nope')?.classList.remove('show');
@@ -852,8 +852,8 @@
       const card = document.querySelector('.card.current');
       if (!card) return;
 
-      if (type === 'like') animateSwipe(card, 'right', 'like');
-      else if (type === 'nope') animateSwipe(card, 'left', 'nope');
+      if (type === 'like') animateSwipe(card, 'left', 'like');
+      else if (type === 'nope') animateSwipe(card, 'right', 'nope');
       else if (type === 'super') animateSwipe(card, 'up', 'super');
     }
 
