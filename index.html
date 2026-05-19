@@ -488,16 +488,16 @@
     <!-- Stats -->
     <div class="stats">
       <div class="stat-item">
+        <div class="stat-number" id="likeCount">0</div>
+        <div class="stat-label">Links ❤️</div>
+      </div>
+      <div class="stat-item">
         <div class="stat-number" id="matchedCount">0</div>
-        <div class="stat-label">Matches ❤️</div>
+        <div class="stat-label">Match ❤️</div>
       </div>
       <div class="stat-item">
         <div class="stat-number" id="nopeCount">0</div>
-        <div class="stat-label">Nach Rechts 💩</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number" id="likeCount">0</div>
-        <div class="stat-label">Nach Links ❤️</div>
+        <div class="stat-label">Rechts 💩</div>
       </div>
     </div>
 
@@ -811,11 +811,11 @@
       const threshold = 80;
 
       if (dx < -threshold) {
-        indNope?.classList.add('show');
-        indLike?.classList.remove('show');
-      } else if (dx > threshold) {
         indLike?.classList.add('show');
         indNope?.classList.remove('show');
+      } else if (dx > threshold) {
+        indNope?.classList.add('show');
+        indLike?.classList.remove('show');
       } else {
         indLike?.classList.remove('show');
         indNope?.classList.remove('show');
@@ -836,9 +836,9 @@
       cleanupDrag();
 
       if (dx < -threshold) {
-        animateSwipe(card, 'left', 'nope');
+        animateSwipe(card, 'left', 'like');
       } else if (dx > threshold) {
-        animateSwipe(card, 'right', 'like');
+        animateSwipe(card, 'right', 'nope');
       } else {
         card.style.transform = '';
         card.querySelector('.swipe-indicator.nope')?.classList.remove('show');
@@ -852,8 +852,8 @@
       const card = document.querySelector('.card.current');
       if (!card) return;
 
-      if (type === 'like') animateSwipe(card, 'right', 'like');
-      else if (type === 'nope') animateSwipe(card, 'left', 'nope');
+      if (type === 'like') animateSwipe(card, 'left', 'like');
+      else if (type === 'nope') animateSwipe(card, 'right', 'nope');
       else if (type === 'super') animateSwipe(card, 'up', 'super');
     }
 
