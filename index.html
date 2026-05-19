@@ -277,6 +277,24 @@
       -webkit-box-orient: vertical;
     }
 
+    /* Swipe hint at bottom of card */
+    .swipe-hint {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.25);
+      user-select: none;
+    }
+
+    .swipe-hint .hint-left { color: rgba(46, 204, 113, 0.4); }
+    .swipe-hint .hint-right { color: rgba(231, 76, 60, 0.4); }
+
     /* Action buttons */
     .actions {
       display: flex;
@@ -708,112 +726,86 @@
             }).join('')}
           </div>
           <div class="card-bio">${profile.bio}</div>
+          <div class="swipe-hint">
+            <span class="hint-left">👈 Match</span>
+            <span class="hint-right">Nope 👉</span>
+          </div>
         </div>
       `;
 
       return div;
     }
 
-    // ─── Drag to Swipe — Touch + Pointer ────────────────────────
+    // ─── Drag to Swipe — Unified (Pointer or Touch, never both) ──
     function setupDrag() {
       const card = document.querySelector('.card.current');
       if (!card) return;
 
-      // Cleanup: remove any old listeners first (safety net)
-      teardownDragListeners();
+      // Cleanup any leftover listeners from previous rounds
+      cleanupDrag();
 
-      // Pointer Events (Desktop + modern mobile)
-      card.addEventListener('pointerdown', onPointerDown, { passive: true });
-
-      // Touch Events (older mobile browsers)
-      card.addEventListener('touchstart', onTouchStart, { passive: true });
-    }
-
-    let _boundPointerMove = null;
-    let _boundPointerUp = null;
-    let _boundTouchMove = null;
-    let _boundTouchEnd = null;
-
-    function teardownDragListeners() {
-      if (_boundPointerMove) {
-        document.removeEventListener('pointermove', _boundPointerMove);
-        _boundPointerMove = null;
-      }
-      if (_boundPointerUp) {
-        document.removeEventListener('pointerup', _boundPointerUp);
-        _boundPointerUp = null;
-      }
-      if (_boundTouchMove) {
-        document.removeEventListener('touchmove', _boundTouchMove, { passive: false });
-        _boundTouchMove = null;
-      }
-      if (_boundTouchEnd) {
-        document.removeEventListener('touchend', _boundTouchEnd);
-        _boundTouchEnd = null;
+      // Use Pointer Events if supported, otherwise Touch
+      if (window.PointerEvent) {
+        card.addEventListener('pointerdown', onDragStart, { passive: true });
+      } else {
+        card.addEventListener('touchstart', onDragStart, { passive: true });
       }
     }
 
-    function onPointerDown(e) {
+    let _onMove = null;
+    let _onEnd = null;
+
+    function cleanupDrag() {
+      if (_onMove) {
+        if (window.PointerEvent) {
+          document.removeEventListener('pointermove', _onMove);
+          document.removeEventListener('pointerup', _onEnd);
+        } else {
+          document.removeEventListener('touchmove', _onMove, { passive: false });
+          document.removeEventListener('touchend', _onEnd);
+        }
+        _onMove = null;
+        _onEnd = null;
+      }
+      swipeState = null;
+    }
+
+    function onDragStart(e) {
       if (isAnimating) return;
+      cleanupDrag();
+
       const card = e.currentTarget;
       if (!card) return;
 
-      // Cleanup any lingering listeners first
-      teardownDragListeners();
+      const point = e.touches ? e.touches[0] : e;
+      if (!point) return;
 
-      swipeState = {
-        card,
-        startX: e.clientX,
-        startY: e.clientY,
-        typing: 'pointer'
-      };
-
-      card.classList.add('dragging');
-      card.setPointerCapture(e.pointerId);
-
-      _boundPointerMove = (ev) => onDragMove(ev, 'pointer');
-      _boundPointerUp = (ev) => onDragEnd(ev, 'pointer');
-      document.addEventListener('pointermove', _boundPointerMove);
-      document.addEventListener('pointerup', _boundPointerUp);
-    }
-
-    function onTouchStart(e) {
-      if (isAnimating) return;
-      const card = e.currentTarget;
-      if (!card || e.touches.length > 1) return;
-
-      teardownDragListeners();
-
-      const touch = e.touches[0];
-      swipeState = {
-        card,
-        startX: touch.clientX,
-        startY: touch.clientY,
-        typing: 'touch'
-      };
-
+      swipeState = { card, startX: point.clientX, startY: point.clientY };
       card.classList.add('dragging');
 
-      _boundTouchMove = (ev) => onDragMove(ev, 'touch');
-      _boundTouchEnd = (ev) => onDragEnd(ev, 'touch');
-      document.addEventListener('touchmove', _boundTouchMove, { passive: false });
-      document.addEventListener('touchend', _boundTouchEnd, { passive: true });
+      if (window.PointerEvent) {
+        _onMove = (ev) => { ev.preventDefault(); onDragMove(ev, null); };
+        _onEnd = (ev) => onDragEnd(ev);
+        document.addEventListener('pointermove', _onMove, { passive: false });
+        document.addEventListener('pointerup', _onEnd);
+      } else {
+        _onMove = (ev) => { ev.preventDefault(); onDragMove(ev, ev.touches[0]); };
+        _onEnd = (ev) => onDragEnd(ev);
+        document.addEventListener('touchmove', _onMove, { passive: false });
+        document.addEventListener('touchend', _onEnd);
+      }
     }
 
-    function onDragMove(e, type) {
+    function onDragMove(e, pointOverride) {
       if (!swipeState) return;
-      e.preventDefault();
-
-      const clientX = type === 'touch' ? e.touches[0].clientX : e.clientX;
-      const clientY = type === 'touch' ? e.touches[0].clientY : e.clientY;
-
-      const dx = clientX - swipeState.startX;
-      const dy = clientY - swipeState.startY;
+      const point = pointOverride || e;
+      const dx = point.clientX - swipeState.startX;
+      const dy = point.clientY - swipeState.startY;
       const rotate = dx * 0.08;
 
       swipeState.card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`;
 
-      // Show indicators — left = like, right = nope
+      // Show indicators — left = match, right = nope
       const indLike = swipeState.card.querySelector('.swipe-indicator.like');
       const indNope = swipeState.card.querySelector('.swipe-indicator.nope');
       const threshold = 80;
@@ -830,20 +822,18 @@
       }
     }
 
-    function onDragEnd(e, type) {
+    function onDragEnd(e) {
       if (!swipeState) return;
 
       const card = swipeState.card;
       card.classList.remove('dragging');
 
-      const clientX = type === 'touch'
-        ? (e.changedTouches?.[0]?.clientX ?? e.clientX)
-        : e.clientX;
-
-      const dx = clientX - swipeState.startX;
+      // Get end position
+      const point = e.changedTouches ? e.changedTouches[0] : e;
+      const dx = point ? point.clientX - swipeState.startX : 0;
       const threshold = 100;
 
-      teardownDragListeners();
+      cleanupDrag();
 
       if (dx < -threshold) {
         animateSwipe(card, 'left', 'like');
@@ -854,8 +844,6 @@
         card.querySelector('.swipe-indicator.nope')?.classList.remove('show');
         card.querySelector('.swipe-indicator.like')?.classList.remove('show');
       }
-
-      swipeState = null;
     }
 
     // ─── Swipe Actions (Buttons) ─────────────────────────────────
@@ -864,8 +852,8 @@
       const card = document.querySelector('.card.current');
       if (!card) return;
 
-      if (type === 'like') animateSwipe(card, 'right', 'like');
-      else if (type === 'nope') animateSwipe(card, 'left', 'nope');
+      if (type === 'like') animateSwipe(card, 'left', 'like');
+      else if (type === 'nope') animateSwipe(card, 'right', 'nope');
       else if (type === 'super') animateSwipe(card, 'up', 'super');
     }
 
