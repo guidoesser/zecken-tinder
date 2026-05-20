@@ -212,6 +212,8 @@
       font-family: inherit;
     }
     .user-bar .user-actions button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .user-bar .user-actions button.admin-btn { color: #f1c40f; }
+    .user-bar .user-actions button.admin-btn:hover { background: rgba(241,196,15,0.15); border-color: #f1c40f; }
     .user-bar .user-actions button.logout { color: #e74c3c; }
     .user-bar .user-actions button.logout:hover { background: rgba(231,76,60,0.15); border-color: #e74c3c; }
     .user-bar .user-actions button.profile-btn { color: #3498db; }
@@ -574,6 +576,66 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════════ -->
+    <!-- SCREEN: Admin                                           -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screenAdmin">
+      <div class="auth-box">
+        <h2>⚙️ Admin-Bereich</h2>
+        <p class="auth-sub" style="margin-bottom:12px;">SMTP & Domain-Konfiguration</p>
+        <div class="auth-error" id="adminError"></div>
+        <div class="auth-success" id="adminSuccess" style="display:none;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.3);color:#2ecc71;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600;margin-bottom:16px;"></div>
+
+        <form id="adminSmtpForm" onsubmit="return handleAdminSaveSmtp(event)">
+          <h3 style="color:#fff;font-size:15px;font-weight:700;margin:0 0 12px 0;">📧 SMTP</h3>
+          <div class="form-group">
+            <label>Host</label>
+            <input type="text" id="adminSmtpHost" placeholder="z.B. smtp.riseup.net" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Port</label>
+              <input type="number" id="adminSmtpPort" placeholder="587" value="587" required>
+            </div>
+            <div class="form-group">
+              <label>Benutzername</label>
+              <input type="text" id="adminSmtpUser" placeholder="dein@riseup.net" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Passwort</label>
+              <input type="password" id="adminSmtpPass" placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+              <label>Absender (From)</label>
+              <input type="text" id="adminSmtpFrom" placeholder="Zecken-Tinder <dein@riseup.net>" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="adminSmtpBtn" style="margin-bottom:8px;">SMTP speichern</button>
+        </form>
+        <button class="btn-primary" id="adminTestBtn" onclick="adminTestEmail()" style="margin-bottom:24px;background:rgba(52,152,219,0.3);background:linear-gradient(135deg,#2980b9,#3498db);">📨 Test-Mail senden</button>
+
+        <form id="adminDomainForm" onsubmit="return handleAdminSaveDomain(event)">
+          <h3 style="color:#fff;font-size:15px;font-weight:700;margin:0 0 12px 0;">🌐 Domain</h3>
+          <div class="form-group">
+            <label>App-URL (für Verifikations-Links)</label>
+            <input type="text" id="adminDomain" placeholder="http://185.194.218.98:3001" required>
+          </div>
+          <button type="submit" class="btn-primary" id="adminDomainBtn">Domain speichern</button>
+        </form>
+
+        <div style="margin-top:24px;">
+          <h3 style="color:#fff;font-size:15px;font-weight:700;margin:0 0 8px 0;">👥 User</h3>
+          <div id="adminUserList" style="font-size:13px;color:rgba(255,255,255,0.6);">Lade...</div>
+        </div>
+
+        <div class="auth-link" style="margin-top:20px;">
+          <a onclick="showApp()">← Zurück zum Swipen</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════ -->
     <!-- SCREEN: App (Swiping)                                  -->
     <!-- ════════════════════════════════════════════════════════ -->
     <div class="screen" id="screenApp">
@@ -585,6 +647,7 @@
         </div>
         <div class="user-actions" id="userActions">
           <button class="profile-btn" id="profileEditBtn" onclick="openEditProfile()" style="display:none">✏️ Profil</button>
+          <button class="admin-btn" id="adminBtn" onclick="openAdmin()" style="display:none">⚙️</button>
           <button class="logout" id="logoutBtn" onclick="handleLogout()" style="display:none">🚪</button>
         </div>
       </div>
@@ -760,6 +823,7 @@
         avatar.textContent = emoji;
         name.innerHTML = `${currentUser.username} <small>(${currentProfile ? currentProfile.name : 'kein Profil'})</small>`;
         editBtn.style.display = currentProfile ? 'inline-block' : 'none';
+        document.getElementById('adminBtn').style.display = currentUser.isAdmin ? 'inline-block' : 'none';
         logoutBtn.style.display = 'inline-block';
       }
     }
@@ -1215,6 +1279,156 @@
     async function resendVerification() {
       const btn = document.getElementById('resendBtn');
       btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('verifyEmailError');
+      errEl.classList.remove('show');
+      try {
+        const r = await fetch('/api/resend-verification', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await r.json();
+        if (data.error) {
+          errEl.textContent = data.error;
+          errEl.classList.add('show');
+        } else {
+          document.getElementById('verifyText').textContent = '✅ Mail wurde gesendet!';
+          setTimeout(() => {
+            document.getElementById('verifyText').textContent = 'Wir haben eine Bestätigungs-Mail an deine Adresse gesendet.';
+          }, 3000);
+        }
+      } finally {
+        btn.disabled = false; btn.textContent = 'Mail erneut senden';
+      }
+    }
+
+    // ─── Admin ────────────────────────────────────────────────
+    function openAdmin() {
+      loadAdminSmtp();
+      loadAdminDomain();
+      loadAdminUsers();
+      showScreen('screenAdmin');
+    }
+
+    async function loadAdminSmtp() {
+      try {
+        const r = await fetch('/api/admin/smtp', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await r.json();
+        if (data.configured) {
+          document.getElementById('adminSmtpHost').value = data.host || '';
+          document.getElementById('adminSmtpPort').value = data.port || 587;
+          document.getElementById('adminSmtpUser').value = data.user || '';
+          document.getElementById('adminSmtpPass').value = '';
+          document.getElementById('adminSmtpFrom').value = data.from || '';
+          document.getElementById('adminSmtpPass').placeholder = '•••••• (unchanged)';
+          document.getElementById('adminSmtpPass').required = false;
+        }
+      } catch (e) {}
+    }
+
+    async function loadAdminDomain() {
+      try {
+        const r = await fetch('/api/admin/domain', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await r.json();
+        document.getElementById('adminDomain').value = data.domain || '';
+      } catch (e) {}
+    }
+
+    async function loadAdminUsers() {
+      try {
+        const r = await fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await r.json();
+        const list = document.getElementById('adminUserList');
+        if (!data.users || data.users.length === 0) {
+          list.innerHTML = 'Keine User';
+          return;
+        }
+        list.innerHTML = data.users.map(u =>
+          `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div>
+              <strong style="color:#fff;">${u.username}</strong>
+              <span style="color:rgba(255,255,255,0.4);font-size:12px;margin-left:8px;">${u.email}</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              ${u.emailVerified ? '<span style="color:#2ecc71;font-size:11px;">✓</span>' : '<button onclick="adminVerifyUser(' + u.id + ')" style="background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.3);color:#2ecc71;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">Bestätigen</button>'}
+              ${u.isAdmin ? '<span style="color:#f1c40f;font-size:11px;">⚙️</span>' : ''}
+            </div>
+          </div>`
+        ).join('');
+      } catch (e) {}
+    }
+
+    async function adminVerifyUser(userId) {
+      await fetch('/api/admin/users/' + userId + '/verify', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+      });
+      loadAdminUsers();
+    }
+
+    async function handleAdminSaveSmtp(e) {
+      e.preventDefault();
+      const btn = document.getElementById('adminSmtpBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('adminError');
+      const okEl = document.getElementById('adminSuccess');
+      errEl.classList.remove('show'); okEl.style.display = 'none';
+      try {
+        const pass = document.getElementById('adminSmtpPass').value;
+        const body = {
+          host: document.getElementById('adminSmtpHost').value,
+          port: parseInt(document.getElementById('adminSmtpPort').value) || 587,
+          user: document.getElementById('adminSmtpUser').value,
+          pass: pass || 'placeholder',
+          from: document.getElementById('adminSmtpFrom').value
+        };
+        if (!pass) { errEl.textContent = 'Passwort eingeben'; errEl.classList.add('show'); return; }
+        const r = await fetch('/api/admin/smtp', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        if (data.error) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+        okEl.textContent = '✅ SMTP gespeichert!';
+        okEl.style.display = 'block';
+      } finally { btn.disabled = false; btn.textContent = 'SMTP speichern'; }
+    }
+
+    async function handleAdminSaveDomain(e) {
+      e.preventDefault();
+      const btn = document.getElementById('adminDomainBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('adminError');
+      const okEl = document.getElementById('adminSuccess');
+      errEl.classList.remove('show'); okEl.style.display = 'none';
+      try {
+        const r = await fetch('/api/admin/domain', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ domain: document.getElementById('adminDomain').value })
+        });
+        const data = await r.json();
+        if (data.error) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+        okEl.textContent = '✅ Domain gespeichert!';
+        okEl.style.display = 'block';
+      } finally { btn.disabled = false; btn.textContent = 'Domain speichern'; }
+    }
+
+    async function adminTestEmail() {
+      const btn = document.getElementById('adminTestBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('adminError');
+      const okEl = document.getElementById('adminSuccess');
+      errEl.classList.remove('show'); okEl.style.display = 'none';
+      try {
+        const r = await fetch('/api/admin/test-email', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await r.json();
+        if (data.error) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+        okEl.textContent = '✅ Test-Mail gesendet! Check dein Postfach.';
+        okEl.style.display = 'block';
+      } finally { btn.disabled = false; btn.textContent = '📨 Test-Mail senden'; }
+    }
       const errEl = document.getElementById('verifyEmailError');
       errEl.classList.remove('show');
       try {

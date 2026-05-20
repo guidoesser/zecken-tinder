@@ -13,7 +13,11 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // ─── Config ──────────────────────────────────────────────────────
-const SERVER_BASE = process.env.SERVER_BASE || 'http://185.194.218.98:3001';
+const getServerBase = () => {
+  return db.prepare("SELECT value FROM settings WHERE key='server_base'").pluck().get()
+    || process.env.SERVER_BASE
+    || 'http://185.194.218.98:3001';
+};
 const getSmtpConfig = () => {
   const raw = db.prepare("SELECT value FROM settings WHERE key='smtp_config'").pluck().get();
   return raw ? JSON.parse(raw) : null;
@@ -79,9 +83,18 @@ if (!usersCols.includes('password_hash')) {
 }
 if (!usersCols.includes('email_verified')) {
   db.exec("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0");
-  // Mark all existing users as verified (pre-verification era)
   db.exec("UPDATE users SET email_verified=1");
   console.log('  ↳ Migration: email_verified added to users (existing users verified)');
+}
+if (!usersCols.includes('is_admin')) {
+  db.exec("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0");
+  console.log('  ↳ Migration: is_admin added to users');
+}
+// Make GTR (id=3) admin if not already
+const gtrAdmin = db.prepare("SELECT is_admin FROM users WHERE id=3").get();
+if (gtrAdmin && !gtrAdmin.is_admin) {
+  db.exec("UPDATE users SET is_admin=1 WHERE id=3");
+  console.log('  ↳ GTR (id=3) zum Admin gemacht');
 }
 
 // ─── JWT Secret ──────────────────────────────────────────────────
@@ -163,7 +176,7 @@ function sendVerificationEmail(userId, email, username) {
     db.prepare('INSERT INTO email_verifications (user_id, token) VALUES (?, ?)').run(userId, token);
   }
 
-  const link = `${SERVER_BASE}/api/verify?token=${token}`;
+  const link = `${getServerBase()}/api/verify?token=${token}`;
 
   try {
     const transporter = nodemailer.createTransport({
@@ -196,6 +209,15 @@ function emailVerifiedMiddleware(req, res, next) {
   const user = db.prepare('SELECT email_verified FROM users WHERE id=?').get(req.userId);
   if (!user || !user.email_verified) {
     return res.status(403).json({ error: 'Email nicht bestätigt', needsVerification: true });
+  }
+  next();
+}
+
+// ─── Admin Middleware ───────────────────────────────────────────
+function adminMiddleware(req, res, next) {
+  const user = db.prepare('SELECT is_admin FROM users WHERE id=?').get(req.userId);
+  if (!user || !user.is_admin) {
+    return res.status(403).json({ error: 'Admin-Zugriff erforderlich' });
   }
   next();
 }
@@ -271,18 +293,83 @@ app.post('/api/login', (req, res) => {
   });
 });
 
-// GET /api/me — current user info + profile + verification status
+// GET /api/me — current user info + profile + verification + admin status
 app.get('/api/me', authMiddleware, (req, res) => {
-  const user = db.prepare('SELECT id, username, email, email_verified, created_at FROM users WHERE id = ?').get(req.userId);
+  const user = db.prepare('SELECT id, username, email, email_verified, is_admin, created_at FROM users WHERE id = ?').get(req.userId);
   if (!user) return res.status(404).json({ error: 'User nicht gefunden' });
   const profile = db.prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(req.userId);
   res.json({
-    user: { ...user, emailVerified: !!user.email_verified },
+    user: { ...user, emailVerified: !!user.email_verified, isAdmin: !!user.is_admin },
     profile: profile ? { ...profile, tags: JSON.parse(profile.tags || '[]') } : null
   });
 });
 
-// ─── Email Verification Routes ──────────────────────────────────
+// ─── Admin Routes ────────────────────────────────────────────────
+
+// GET /api/admin/smtp — get current SMTP config (password masked)
+app.get('/api/admin/smtp', authMiddleware, adminMiddleware, (req, res) => {
+  const smtp = getSmtpConfig();
+  if (!smtp) return res.json({ configured: false });
+  res.json({
+    configured: true,
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.secure,
+    user: smtp.user,
+    from: smtp.from,
+    pass: smtp.pass ? '••••••' : ''
+  });
+});
+
+// PUT /api/admin/smtp — update SMTP config
+app.put('/api/admin/smtp', authMiddleware, adminMiddleware, (req, res) => {
+  const { host, port, user, pass, from } = req.body;
+  if (!host || !port || !user || !pass || !from) {
+    return res.status(400).json({ error: 'host, port, user, pass, from sind erforderlich' });
+  }
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('smtp_config', ?)")
+    .run(JSON.stringify({ host, port: parseInt(port), secure: port === 465, user, pass, from }));
+  res.json({ message: 'SMTP gespeichert!' });
+});
+
+// GET /api/admin/domain — get current domain
+app.get('/api/admin/domain', authMiddleware, adminMiddleware, (req, res) => {
+  res.json({ domain: getServerBase() });
+});
+
+// PUT /api/admin/domain — update domain
+app.put('/api/admin/domain', authMiddleware, adminMiddleware, (req, res) => {
+  const { domain } = req.body;
+  if (!domain) return res.status(400).json({ error: 'domain ist erforderlich' });
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('server_base', ?)").run(domain);
+  res.json({ message: 'Domain gespeichert!', domain });
+});
+
+// GET /api/admin/users — list all users
+app.get('/api/admin/users', authMiddleware, adminMiddleware, (req, res) => {
+  const users = db.prepare('SELECT id, username, email, email_verified, is_admin, created_at FROM users ORDER BY id').all();
+  res.json({ users: users.map(u => ({ ...u, emailVerified: !!u.email_verified, isAdmin: !!u.is_admin })) });
+});
+
+// POST /api/admin/users/:id/verify — force-verify a user
+app.post('/api/admin/users/:id/verify', authMiddleware, adminMiddleware, (req, res) => {
+  db.exec('UPDATE users SET email_verified=1 WHERE id=' + parseInt(req.params.id));
+  res.json({ message: 'User verifiziert' });
+});
+
+// POST /api/admin/users/:id/make-admin — make a user admin
+app.post('/api/admin/users/:id/make-admin', authMiddleware, adminMiddleware, (req, res) => {
+  db.exec('UPDATE users SET is_admin=1 WHERE id=' + parseInt(req.params.id));
+  res.json({ message: 'Zum Admin gemacht' });
+});
+
+// POST /api/admin/test-email — send a test email
+app.post('/api/admin/test-email', authMiddleware, adminMiddleware, (req, res) => {
+  const admin = db.prepare('SELECT email, username FROM users WHERE id=?').get(req.userId);
+  const sent = sendVerificationEmail(req.userId, admin.email, admin.username);
+  if (sent) res.json({ message: 'Test-Mail gesendet!' });
+  else res.status(500).json({ error: 'SMTP nicht konfiguriert oder Fehler' });
+});
 
 // GET /api/verify — verify email via token link
 app.get('/api/verify', (req, res) => {
@@ -303,7 +390,7 @@ app.get('/api/verify', (req, res) => {
       <h1 style="font-size:64px;color:#2ecc71;">✓</h1>
       <h2 style="margin:16px 0;">Email bestätigt! ❤️</h2>
       <p style="color:rgba(255,255,255,0.6);margin-bottom:24px;">Du kannst dich jetzt einloggen und losswipen.</p>
-      <a href="${SERVER_BASE}" style="display:inline-block;padding:14px 40px;border-radius:50px;background:linear-gradient(135deg,#e84118,#c0392b);color:#fff;font-size:16px;font-weight:700;text-decoration:none;">Zur App →</a>
+      <a href="${getServerBase()}" style="display:inline-block;padding:14px 40px;border-radius:50px;background:linear-gradient(135deg,#e84118,#c0392b);color:#fff;font-size:16px;font-weight:700;text-decoration:none;">Zur App →</a>
     </div></body></html>`);
 });
 
@@ -330,34 +417,6 @@ app.get('/api/verify-status', authMiddleware, (req, res) => {
     smtpConfigured: !!smtp
   });
 });
-
-// POST /api/setup-smtp — configure SMTP (requires env token)
-app.post('/api/setup-smtp', (req, res) => {
-  // Protected by a setup token in settings
-  const { host, port, user, pass, from, setupKey } = req.body;
-  const expectedKey = db.prepare("SELECT value FROM settings WHERE key='setup_key'").pluck().get();
-  if (!expectedKey || setupKey !== expectedKey) {
-    return res.status(403).json({ error: 'Ungültiger Setup-Key' });
-  }
-  if (!host || !port || !user || !pass || !from) {
-    return res.status(400).json({ error: 'host, port, user, pass, from sind erforderlich' });
-  }
-  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('smtp_config', ?)")
-    .run(JSON.stringify({ host, port: parseInt(port), secure: port === 465, user, pass, from }));
-  res.json({ message: 'SMTP konfiguriert!' });
-});
-
-// GET /api/setup-key — one-time setup key (shown in server logs)
-// The setup key is generated on first run if not present
-const setupKey = db.prepare("SELECT value FROM settings WHERE key='setup_key'").pluck().get();
-if (!setupKey) {
-  const key = crypto.randomBytes(8).toString('hex');
-  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('setup_key', ?)").run(key);
-  console.log(`\n  ┌────────────────────────────────────────────┐`);
-  console.log(`  │ SMTP-Setup-Key: ${key}              │`);
-  console.log(`  │ POST /api/setup-smtp mit diesem Key     │`);
-  console.log(`  └────────────────────────────────────────────┘\n`);
-}
 
 // ─── Profile Routes ───────────────────────────────────────────────
 
