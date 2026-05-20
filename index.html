@@ -755,7 +755,13 @@
         localStorage.setItem(TOKEN_KEY, token);
         currentUser = data.user;
         currentProfile = null;
-        await loadUser();
+        try {
+          const me = await apiGet('/api/me');
+          if (me.user) {
+            currentUser = me.user;
+            currentProfile = me.profile;
+          }
+        } catch(e) {}
         if (data.needsVerification) {
           showScreen('screenVerifyEmail');
         } else if (currentProfile) {
@@ -764,6 +770,10 @@
           initProfileForm();
           showScreen('screenCreateProfile');
         }
+      } catch (e) {
+        console.error('Login error:', e);
+        errEl.textContent = 'Ein Fehler ist aufgetreten';
+        errEl.classList.add('show');
       } finally {
         btn.disabled = false; btn.textContent = 'Einloggen →';
       }
@@ -1258,7 +1268,7 @@
       }
       updateUserBar();
       showScreen('screenApp');
-      init();
+      init().catch(e => console.error('init error:', e));
     }
 
     // ─── Show Verify or App ───────────────────────────────────
