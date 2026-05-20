@@ -12,6 +12,16 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+// No-cache headers for HTML
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html') || req.path === '/') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
+
 // ─── Config ──────────────────────────────────────────────────────
 const getServerBase = () => {
   return db.prepare("SELECT value FROM settings WHERE key='server_base'").pluck().get()

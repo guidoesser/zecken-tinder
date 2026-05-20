@@ -761,7 +761,7 @@
             currentUser = me.user;
             currentProfile = me.profile;
           }
-        } catch(e) {}
+        } catch(e) { console.error('loadUser error:', e); }
         if (data.needsVerification) {
           showScreen('screenVerifyEmail');
         } else if (currentProfile) {
@@ -771,8 +771,7 @@
           showScreen('screenCreateProfile');
         }
       } catch (e) {
-        console.error('Login error:', e);
-        errEl.textContent = 'Ein Fehler ist aufgetreten';
+        errEl.textContent = 'Fehler: ' + e.message;
         errEl.classList.add('show');
       } finally {
         btn.disabled = false; btn.textContent = 'Einloggen →';
