@@ -1438,6 +1438,11 @@
         okEl.style.display = 'block';
       } finally { btn.disabled = false; btn.textContent = '📨 Test-Mail senden'; }
     }
+
+    // ─── Resend Verification ──────────────────────────────────
+    async function resendVerification() {
+      const btn = document.getElementById('resendBtn');
+      btn.disabled = true; btn.textContent = '⏳';
       const errEl = document.getElementById('verifyEmailError');
       errEl.classList.remove('show');
       try {
