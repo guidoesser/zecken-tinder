@@ -64,6 +64,25 @@ git pull
 docker compose up -d --build
 ```
 
+### Admin-Benutzer erstellen (Docker-Konsole)
+
+Beim ersten Start gibt es noch keinen Admin. Leg einen mit dem Create-Script an:
+
+```bash
+docker compose exec zecken-tinder \
+  node scripts/create-admin.js admin admin@example.com deinpasswort
+```
+
+Ersetze `admin`, `admin@example.com` und `deinpasswort` durch deine Wunschdaten.
+Der User wird automatisch verifiziert, zum Admin gemacht und bekommt ein Profil.
+Danach unter http://localhost:3001 einloggen und ⚙️ für SMTP & Domain-Setup nutzen.
+
+→ Das Skript funktioniert auch ohne Docker, direkt im Projektverzeichnis:
+
+```bash
+node scripts/create-admin.js <username> <email> <passwort>
+```
+
 ### Stoppen
 
 ```bash
