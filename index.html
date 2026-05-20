@@ -498,9 +498,6 @@
           </div>
           <button type="submit" class="btn-primary" id="profileBtn">Profil erstellen →</button>
         </form>
-        <div class="auth-link">
-          <a onclick="showApp()">Später, erstmal swipen →</a>
-        </div>
       </div>
     </div>
 
@@ -562,17 +559,14 @@
       <div class="user-bar" id="userBar">
         <div class="user-info">
           <div class="user-avatar" id="userAvatar">🧑</div>
-          <div class="user-name" id="userName">Nicht eingeloggt <small>(Gast)</small></div>
+          <div class="user-name" id="userName"></div>
         </div>
         <div class="user-actions" id="userActions">
           <button class="profile-btn" id="profileEditBtn" onclick="openEditProfile()" style="display:none">✏️ Profil</button>
-          <button onclick="showScreen('screenCreateProfile')" id="createProfileBtn" style="display:none">➕ Profil</button>
           <button class="logout" id="logoutBtn" onclick="handleLogout()" style="display:none">🚪</button>
-          <button onclick="showScreen('screenLogin')" id="loginBtnBar">🔑 Einloggen</button>
         </div>
       </div>
 
-      <!-- Stats -->
       <div class="stats">
         <div class="stat-item">
           <div class="stat-number" id="likeCount">0</div>
@@ -725,7 +719,6 @@
       localStorage.removeItem(TOKEN_KEY);
       currentUser = null;
       currentProfile = null;
-      updateUserBar();
       showScreen('screenLogin');
     }
 
@@ -734,25 +727,14 @@
       const avatar = document.getElementById('userAvatar');
       const name = document.getElementById('userName');
       const editBtn = document.getElementById('profileEditBtn');
-      const createBtn = document.getElementById('createProfileBtn');
       const logoutBtn = document.getElementById('logoutBtn');
-      const loginBtnBar = document.getElementById('loginBtnBar');
 
       if (currentUser) {
         const emoji = currentProfile ? currentProfile.emoji || '🧑' : '🧑';
         avatar.textContent = emoji;
         name.innerHTML = `${currentUser.username} <small>(${currentProfile ? currentProfile.name : 'kein Profil'})</small>`;
         editBtn.style.display = currentProfile ? 'inline-block' : 'none';
-        createBtn.style.display = currentProfile ? 'none' : 'inline-block';
         logoutBtn.style.display = 'inline-block';
-        loginBtnBar.style.display = 'none';
-      } else {
-        avatar.textContent = '🧑';
-        name.innerHTML = 'Nicht eingeloggt <small>(Gast)</small>';
-        editBtn.style.display = 'none';
-        createBtn.style.display = 'none';
-        logoutBtn.style.display = 'none';
-        loginBtnBar.style.display = 'inline-block';
       }
     }
 
@@ -1180,6 +1162,10 @@
 
     // ─── Show App ─────────────────────────────────────────────
     function showApp() {
+      if (!currentUser) {
+        showScreen('screenLogin');
+        return;
+      }
       updateUserBar();
       showScreen('screenApp');
       init();

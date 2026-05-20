@@ -116,18 +116,6 @@ function authMiddleware(req, res, next) {
   }
 }
 
-function optionalAuth(req, res, next) {
-  const header = req.headers.authorization;
-  if (header && header.startsWith('Bearer ')) {
-    try {
-      const token = header.slice(7);
-      const decoded = jwt.verify(token, jwtSecret);
-      req.userId = decoded.userId;
-    } catch (e) { /* ignore */ }
-  }
-  next();
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────
 function enrichProfile(p, isUserProfile = false) {
   return {
@@ -269,8 +257,8 @@ app.get('/api/profile', authMiddleware, (req, res) => {
 
 // ─── Swipe Routes ─────────────────────────────────────────────────
 
-// GET /api/profiles — shuffled order, with current index
-app.get('/api/profiles', optionalAuth, (req, res) => {
+// GET /api/profiles — shuffled order, with current index (auth required)
+app.get('/api/profiles', authMiddleware, (req, res) => {
   const allProfiles = getAllProfiles();
   const orderStr = db.prepare("SELECT value FROM settings WHERE key='shuffled_order'").pluck().get();
   let order = JSON.parse(orderStr || '[]');
@@ -279,22 +267,16 @@ app.get('/api/profiles', optionalAuth, (req, res) => {
   while (order.length < allProfiles.length) order.push(order.length);
   if (order.length > allProfiles.length) order = order.slice(0, allProfiles.length);
 
-  // Find current index: last swipe for this user, or global
-  let maxSwiped;
-  if (req.userId) {
-    maxSwiped = db.prepare("SELECT MAX(profile_idx) as m FROM swipes WHERE user_id=?").get(req.userId)?.m;
-  }
-  if (maxSwiped === undefined || maxSwiped === null) {
-    maxSwiped = db.prepare("SELECT MAX(profile_idx) as m FROM swipes").get()?.m ?? -1;
-  }
+  // Find current index based on this user's swipes
+  const maxSwiped = db.prepare("SELECT MAX(profile_idx) as m FROM swipes WHERE user_id=?").get(req.userId)?.m ?? -1;
   const currentIndex = maxSwiped + 1;
 
   const shuffled = order.slice(0, allProfiles.length).map(i => allProfiles[i]);
   res.json({ profiles: shuffled, currentIndex, total: allProfiles.length });
 });
 
-// POST /api/swipe — record a swipe
-app.post('/api/swipe', optionalAuth, (req, res) => {
+// POST /api/swipe — record a swipe (auth required)
+app.post('/api/swipe', authMiddleware, (req, res) => {
   const { profileIdx, type } = req.body;
   if (profileIdx === undefined || !['like', 'nope', 'super'].includes(type)) {
     return res.status(400).json({ error: 'profileIdx + type required (like/nope/super)' });
@@ -303,51 +285,32 @@ app.post('/api/swipe', optionalAuth, (req, res) => {
   if (profileIdx < 0 || profileIdx >= allProfiles.length) {
     return res.status(400).json({ error: 'invalid profileIdx' });
   }
-  const userId = req.userId || null;
-  db.prepare('INSERT INTO swipes (user_id, profile_idx, type) VALUES (?, ?, ?)').run(userId, profileIdx, type);
+  db.prepare('INSERT INTO swipes (user_id, profile_idx, type) VALUES (?, ?, ?)').run(req.userId, profileIdx, type);
   res.json({ ok: true });
 });
 
-// GET /api/stats — aggregated stats
-app.get('/api/stats', optionalAuth, (req, res) => {
-  let stats;
-  if (req.userId) {
-    stats = db.prepare(`
-      SELECT type, COUNT(*) as count FROM swipes WHERE user_id=? GROUP BY type
-    `).all(req.userId);
-  } else {
-    stats = db.prepare(`
-      SELECT type, COUNT(*) as count FROM swipes GROUP BY type
-    `).all();
-  }
+// GET /api/stats — user-specific aggregated stats (auth required)
+app.get('/api/stats', authMiddleware, (req, res) => {
+  const stats = db.prepare(`
+    SELECT type, COUNT(*) as count FROM swipes WHERE user_id=? GROUP BY type
+  `).all(req.userId);
   const likes = stats.find(s => s.type === 'like')?.count ?? 0;
   const nopes = stats.find(s => s.type === 'nope')?.count ?? 0;
   const supers = stats.find(s => s.type === 'super')?.count ?? 0;
 
   const allProfiles = getAllProfiles();
-  let matchedRows;
-  if (req.userId) {
-    matchedRows = db.prepare(`
-      SELECT DISTINCT profile_idx FROM swipes WHERE user_id=? AND type IN ('like','super')
-    `).all(req.userId);
-  } else {
-    matchedRows = db.prepare(`
-      SELECT DISTINCT profile_idx FROM swipes WHERE type IN ('like','super')
-    `).all();
-  }
+  const matchedRows = db.prepare(`
+    SELECT DISTINCT profile_idx FROM swipes WHERE user_id=? AND type IN ('like','super')
+  `).all(req.userId);
   const matchedProfiles = matchedRows.map(r => allProfiles[r.profile_idx]).filter(Boolean);
 
   res.json({ likes, nopes, supers, totalSwipes: likes + nopes + supers, matchedProfiles });
 });
 
-// POST /api/reset — delete all swipes + reshuffle
-app.post('/api/reset', optionalAuth, (req, res) => {
+// POST /api/reset — delete your swipes + reshuffle
+app.post('/api/reset', authMiddleware, (req, res) => {
   const allProfiles = getAllProfiles();
-  if (req.userId) {
-    db.prepare('DELETE FROM swipes WHERE user_id=?').run(req.userId);
-  } else {
-    db.prepare('DELETE FROM swipes').run();
-  }
+  db.prepare('DELETE FROM swipes WHERE user_id=?').run(req.userId);
   const newOrder = [...Array(allProfiles.length).keys()].sort(() => Math.random() - 0.5);
   db.prepare("UPDATE settings SET value=? WHERE key='shuffled_order'").run(JSON.stringify(newOrder));
   res.json({ ok: true });
