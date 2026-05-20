@@ -16,10 +16,9 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
-    /* Background pattern — anarcho-punk dots */
     body::before {
       content: '';
       position: fixed;
@@ -38,13 +37,12 @@
       padding: 20px;
     }
 
-    /* Header */
+    /* ─── Shared ─────────────────────────────────────────── */
     .header {
       text-align: center;
       margin-bottom: 24px;
       position: relative;
     }
-
     .logo {
       display: inline-flex;
       align-items: center;
@@ -56,47 +54,196 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      text-shadow: none;
-      position: relative;
     }
+    .logo .tick { font-size: 40px; -webkit-text-fill-color: initial; color: #e84118; }
+    .logo .zecke-logo { display: inline-flex; align-items: center; margin-left: 4px; }
+    .logo .zecke-img { height: 42px; width: auto; filter: drop-shadow(0 2px 8px rgba(232,65,24,0.3)); transition: transform 0.3s ease; }
+    .logo .zecke-img:hover { transform: scale(1.1) rotate(-5deg); }
+    .subtitle { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
 
-    .logo .tick {
-      font-size: 40px;
-      -webkit-text-fill-color: initial;
-      color: #e84118;
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ─── Auth Screens ───────────────────────────────────── */
+    .auth-box {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 32px 28px;
+      margin-top: 12px;
     }
-
-    .logo .bee {
-      -webkit-text-fill-color: initial;
+    .auth-box h2 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-align: center;
     }
-
-    .logo .zecke-logo {
-      display: inline-flex;
-      align-items: center;
-      margin-left: 4px;
+    .auth-box .auth-sub {
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 24px;
     }
-
-    .logo .zecke-img {
-      height: 42px;
-      width: auto;
-      filter: drop-shadow(0 2px 8px rgba(232,65,24,0.3));
-      transition: transform 0.3s ease;
+    .form-group {
+      margin-bottom: 16px;
     }
-
-    .logo .zecke-img:hover {
-      transform: scale(1.1) rotate(-5deg);
-    }
-
-    .subtitle {
+    .form-group label {
+      display: block;
       color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: #e84118;
+    }
+    .form-group input::placeholder, .form-group textarea::placeholder {
+      color: rgba(255,255,255,0.25);
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #e84118, #c0392b);
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      font-family: inherit;
+    }
+    .btn-primary:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(232,65,24,0.3); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .auth-link {
+      text-align: center;
+      margin-top: 16px;
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+    }
+    .auth-link a {
+      color: #e84118;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .auth-link a:hover { text-decoration: underline; }
+
+    .auth-error {
+      background: rgba(231, 76, 60, 0.15);
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      color: #e74c3c;
+      padding: 10px 14px;
+      border-radius: 12px;
       font-size: 13px;
       font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-error.show { display: block; }
+
+    /* ─── User Bar ───────────────────────────────────────── */
+    .user-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+    }
+    .user-bar .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-bar .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(232,65,24,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .user-bar .user-name {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .user-bar .user-name small {
+      color: rgba(255,255,255,0.4);
+      font-weight: 500;
+    }
+    .user-bar .user-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .user-bar .user-actions button {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .user-bar .user-actions button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .user-bar .user-actions button.logout { color: #e74c3c; }
+    .user-bar .user-actions button.logout:hover { background: rgba(231,76,60,0.15); border-color: #e74c3c; }
+    .user-bar .user-actions button.profile-btn { color: #3498db; }
+    .user-bar .user-actions button.profile-btn:hover { background: rgba(52,152,219,0.15); border-color: #3498db; }
+
+    /* ─── Profile Form (inline) ─────────────────────────── */
+    .profile-form { margin-top: 8px; }
+    .profile-form .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    .profile-form .form-row .form-group { flex: 1; }
+    .profile-form .emoji-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       margin-top: 4px;
     }
+    .profile-form .emoji-options span {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 22px;
+      transition: all 0.2s ease;
+    }
+    .profile-form .emoji-options span:hover { background: rgba(255,255,255,0.1); }
+    .profile-form .emoji-options span.selected { border-color: #e84118; background: rgba(232,65,24,0.15); }
 
-    /* Stats bar */
+    /* ─── Stats bar ──────────────────────────────────────── */
     .stats {
       display: flex;
       justify-content: space-between;
@@ -107,392 +254,141 @@
       padding: 12px 20px;
       margin-bottom: 20px;
     }
+    .stat-item { text-align: center; }
+    .stat-number { color: #fff; font-size: 20px; font-weight: 800; }
+    .stat-label { color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-    .stat-item {
-      text-align: center;
-    }
-
-    .stat-number {
-      color: #fff;
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .stat-label {
-      color: rgba(255,255,255,0.4);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* Card deck */
-    .card-deck {
-      position: relative;
-      height: 560px;
-      margin-bottom: 20px;
-    }
-
+    /* ─── Card deck ──────────────────────────────────────── */
+    .card-deck { position: relative; height: 560px; margin-bottom: 20px; }
     .card {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border-radius: 24px;
-      overflow: hidden;
-      background: #1e1e2e;
-      border: 1px solid rgba(255,255,255,0.08);
-      user-select: none;
-      touch-action: none;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      cursor: grab;
+      position: absolute; width: 100%; height: 100%; border-radius: 24px; overflow: hidden;
+      background: #1e1e2e; border: 1px solid rgba(255,255,255,0.08);
+      user-select: none; touch-action: none; transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: grab;
     }
-
     .card:active { cursor: grabbing; }
+    .card.next { transform: scale(0.95) translateY(12px); z-index: 1; opacity: 0.7; }
+    .card.current { z-index: 2; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .card.dragging { transition: none !important; }
 
-    .card.next {
-      transform: scale(0.95) translateY(12px);
-      z-index: 1;
-      opacity: 0.7;
+    .card-avatar { width: 100%; height: 55%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .card-avatar .emoji-bg { font-size: 120px; line-height: 1; filter: drop-shadow(0 4px 20px rgba(0,0,0,0.3)); }
+    .card-avatar .avatar-gradient { position: absolute; inset: 0; opacity: 0.4; }
+    .card-avatar .is-user-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: rgba(52,152,219,0.2); backdrop-filter: blur(8px);
+      border: 1px solid rgba(52,152,219,0.3);
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; color: #3498db;
     }
 
-    .card.current {
-      z-index: 2;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
+    .swipe-indicator { position: absolute; top: 24px; padding: 8px 18px; border-radius: 12px; font-size: 28px; font-weight: 900; letter-spacing: 2px; border: 3px solid; opacity: 0; transition: opacity 0.2s ease; transform: rotate(-15deg); z-index: 10; }
+    .swipe-indicator.nope { right: 24px; color: #8B4513; border-color: #8B4513; }
+    .swipe-indicator.like { left: 24px; color: #e74c3c; border-color: #e74c3c; }
+    .card.current .swipe-indicator.show { opacity: 1; }
 
-    .card.dragging {
-      transition: none !important;
-    }
-
-    /* Avatar area */
-    .card-avatar {
-      width: 100%;
-      height: 55%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card-avatar .emoji-bg {
-      font-size: 120px;
-      line-height: 1;
-      filter: drop-shadow(0 4px 20px rgba(0,0,0,0.3));
-    }
-
-    .card-avatar .avatar-gradient {
-      position: absolute;
-      inset: 0;
-      opacity: 0.4;
-    }
-
-    /* Swipe indicators */
-    .swipe-indicator {
-      position: absolute;
-      top: 24px;
-      padding: 8px 18px;
-      border-radius: 12px;
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      border: 3px solid;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      transform: rotate(-15deg);
-      z-index: 10;
-    }
-
-    .swipe-indicator.nope {
-      right: 24px;
-      color: #8B4513;
-      border-color: #8B4513;
-    }
-
-    .swipe-indicator.like {
-      left: 24px;
-      color: #e74c3c;
-      border-color: #e74c3c;
-    }
-
-    .card.current .swipe-indicator.show {
-      opacity: 1;
-    }
-
-    /* Card info */
-    .card-info {
-      padding: 20px 24px;
-      height: 45%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-name-age {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .card-name-age .name {
-      color: #fff;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .card-name-age .age {
-      color: rgba(255,255,255,0.5);
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    .card-location {
-      color: rgba(255,255,255,0.4);
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-
-    .card-tag {
-      background: rgba(232, 65, 24, 0.15);
-      color: #e84118;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .card-tag.green {
-      background: rgba(46, 204, 113, 0.15);
-      color: #2ecc71;
-    }
-
-    .card-tag.purple {
-      background: rgba(155, 89, 182, 0.15);
-      color: #9b59b6;
-    }
-
-    .card-bio {
-      color: rgba(255,255,255,0.6);
-      font-size: 13px;
-      line-height: 1.5;
-      flex: 1;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-    }
-
-    /* Swipe hint at bottom of card */
-    .swipe-hint {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 6px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.25);
-      user-select: none;
-    }
-
+    .card-info { padding: 20px 24px; height: 45%; display: flex; flex-direction: column; }
+    .card-name-age { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+    .card-name-age .name { color: #fff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .card-name-age .age { color: rgba(255,255,255,0.5); font-size: 22px; font-weight: 600; }
+    .card-location { color: rgba(255,255,255,0.4); font-size: 14px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .card-tag { background: rgba(232, 65, 24, 0.15); color: #e84118; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .card-tag.green { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+    .card-tag.purple { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+    .card-bio { color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.5; flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .swipe-hint { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: rgba(255,255,255,0.25); user-select: none; }
     .swipe-hint .hint-left { color: rgba(231, 76, 60, 0.5); }
     .swipe-hint .hint-right { color: rgba(139, 69, 19, 0.5); }
 
-    /* Action buttons */
-    .actions {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      padding: 8px 0;
-    }
-
-    .action-btn {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      font-size: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #fff;
-      position: relative;
-    }
-
+    .actions { display: flex; justify-content: center; gap: 24px; padding: 8px 0; }
+    .action-btn { width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer; font-size: 28px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
     .action-btn:hover { transform: scale(1.1); }
     .action-btn:active { transform: scale(0.95); }
-
     .action-btn.like { color: #e74c3c; }
     .action-btn.like:hover { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
-
     .action-btn.nope { color: rgba(255,255,255,0.3); }
     .action-btn.nope:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-
     .action-btn.super { color: #3498db; font-size: 24px; }
     .action-btn.super:hover { background: rgba(52, 152, 219, 0.2); border-color: #3498db; }
 
-    /* Match modal */
-    .match-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(20px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-
+    /* ─── Match modal ────────────────────────────────────── */
+    .match-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); display: none; align-items: center; justify-content: center; z-index: 100; }
     .match-overlay.show { display: flex; }
-
-    .match-content {
-      text-align: center;
-      padding: 40px;
-      animation: matchPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    @keyframes matchPop {
-      0% { transform: scale(0); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .match-content .match-icon {
-      font-size: 80px;
-      margin-bottom: 16px;
-      animation: matchBounce 0.6s ease infinite alternate;
-    }
-
-    @keyframes matchBounce {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-10px); }
-    }
-
-    .match-content h2 {
-      color: #fff;
-      font-size: 36px;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-
-    .match-content p {
-      color: rgba(255,255,255,0.6);
-      font-size: 18px;
-      margin-bottom: 32px;
-    }
-
-    .match-btn {
-      background: linear-gradient(135deg, #e84118, #c0392b);
-      color: #fff;
-      border: none;
-      padding: 14px 40px;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-
+    .match-content { text-align: center; padding: 40px; animation: matchPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    @keyframes matchPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .match-content .match-icon { font-size: 80px; margin-bottom: 16px; animation: matchBounce 0.6s ease infinite alternate; }
+    @keyframes matchBounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
+    .match-content h2 { color: #fff; font-size: 36px; font-weight: 900; margin-bottom: 8px; }
+    .match-content p { color: rgba(255,255,255,0.6); font-size: 18px; margin-bottom: 32px; }
+    .match-btn { background: linear-gradient(135deg, #e84118, #c0392b); color: #fff; border: none; padding: 14px 40px; border-radius: 50px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.2s ease; font-family: inherit; }
     .match-btn:hover { transform: scale(1.05); }
+    .match-close { background: transparent; color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.15); padding: 12px 32px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; margin-left: 12px; transition: all 0.2s ease; font-family: inherit; }
+    .match-close:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
 
-    .match-close {
-      background: transparent;
-      color: rgba(255,255,255,0.4);
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 12px 32px;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-left: 12px;
-      transition: all 0.2s ease;
-    }
+    .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 99; overflow: hidden; }
+    .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall 3s ease-in forwards; }
+    @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
 
-    .match-close:hover {
-      color: #fff;
-      border-color: rgba(255,255,255,0.3);
-    }
-
-    /* Particles / confetti */
-    .confetti-container {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 99;
-      overflow: hidden;
-    }
-
-    .confetti {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      animation: confettiFall 3s ease-in forwards;
-    }
-
-    @keyframes confettiFall {
-      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-    }
-
-    /* Empty state */
-    .empty-state {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 560px;
-      text-align: center;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 24px;
-    }
-
+    .empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; height: 560px; text-align: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; }
     .empty-state.show { display: flex; }
-
     .empty-state .icon { font-size: 72px; margin-bottom: 16px; }
     .empty-state h3 { color: #fff; font-size: 24px; font-weight: 800; margin-bottom: 8px; }
     .empty-state p { color: rgba(255,255,255,0.4); font-size: 15px; max-width: 280px; }
+    .empty-state .reset-btn { margin-top: 24px; background: rgba(232, 65, 24, 0.15); color: #e84118; border: 1px solid rgba(232, 65, 24, 0.3); padding: 12px 28px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+    .empty-state .reset-btn:hover { background: rgba(232, 65, 24, 0.25); }
 
-    .empty-state .reset-btn {
-      margin-top: 24px;
-      background: rgba(232, 65, 24, 0.15);
-      color: #e84118;
-      border: 1px solid rgba(232, 65, 24, 0.3);
-      padding: 12px 28px;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 700;
+    /* ─── Checkbox for color pick ────────────────────────── */
+    .color-options {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .color-options span {
+      width: 36px; height: 36px;
+      border-radius: 50%;
       cursor: pointer;
+      border: 3px solid transparent;
       transition: all 0.2s ease;
     }
+    .color-options span.selected { border-color: #fff; transform: scale(1.15); }
+    .color-options span:hover { transform: scale(1.1); }
 
-    .empty-state .reset-btn:hover {
-      background: rgba(232, 65, 24, 0.25);
+    /* ─── Tags input ─────────────────────────────────────── */
+    .tags-input-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 8px 12px;
+      min-height: 44px;
+      cursor: text;
     }
+    .tags-input-wrap .tag {
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(232,65,24,0.15); color: #e84118;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+    }
+    .tags-input-wrap .tag .tag-del {
+      cursor: pointer; font-weight: 800; margin-left: 2px;
+      font-size: 14px; line-height: 1;
+    }
+    .tags-input-wrap .tag .tag-del:hover { color: #c0392b; }
+    .tags-input-wrap input {
+      flex: 1; min-width: 60px;
+      background: transparent; border: none; outline: none;
+      color: #fff; font-size: 14px; font-family: inherit;
+      padding: 4px 0;
+    }
+    .tags-input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+
+    <!-- ─── HEADER ─────────────────────────────────────────── -->
     <div class="header">
       <div class="logo">
         <span class="tick">✓</span>
@@ -504,41 +400,215 @@
       <div class="subtitle">Für linksgrünversiffte Herzen ❤️</div>
     </div>
 
-    <!-- Stats - v2 -->
-    <div class="stats">
-      <div class="stat-item">
-        <div class="stat-number" id="likeCount">0</div>
-        <div class="stat-label">Links ❤️</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number" id="matchedCount">0</div>
-        <div class="stat-label">Match ❤️</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number" id="nopeCount">0</div>
-        <div class="stat-label">Rechts 💩</div>
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- SCREEN: Login                                          -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="screen active" id="screenLogin">
+      <div class="auth-box">
+        <h2>Willkommen zurück</h2>
+        <p class="auth-sub">Melde dich an, um weiterzusingen</p>
+        <div class="auth-error" id="loginError"></div>
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+          <div class="form-group">
+            <label>Username oder Email</label>
+            <input type="text" id="loginUsername" placeholder="z.B. karla_aus_neukölln" required>
+          </div>
+          <div class="form-group">
+            <label>Passwort</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn-primary" id="loginBtn">Einloggen →</button>
+        </form>
+        <div class="auth-link">
+          Noch kein Konto? <a onclick="showScreen('screenRegister')">Registrieren</a>
+        </div>
       </div>
     </div>
 
-    <!-- Card Deck -->
-    <div class="card-deck" id="cardDeck">
-      <!-- Cards injected by JS -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- SCREEN: Register                                       -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screenRegister">
+      <div class="auth-box">
+        <h2>Konto erstellen</h2>
+        <p class="auth-sub">Werde Teil der Zecken-Community</p>
+        <div class="auth-error" id="registerError"></div>
+        <form id="registerForm" onsubmit="return handleRegister(event)">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="regUsername" placeholder="z.B. karla_aus_neukölln" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="regEmail" placeholder="karla@riseup.net" required>
+          </div>
+          <div class="form-group">
+            <label>Passwort</label>
+            <input type="password" id="regPassword" placeholder="Mindestens 6 Zeichen" minlength="6" required>
+          </div>
+          <button type="submit" class="btn-primary" id="registerBtn">Registrieren →</button>
+        </form>
+        <div class="auth-link">
+          Schon registriert? <a onclick="showScreen('screenLogin')">Einloggen</a>
+        </div>
+      </div>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state" id="emptyState">
-      <div class="icon">🏕️</div>
-      <h3>Alle abgeswiped!</h3>
-      <p>Keine Zecken mehr in deiner Nähe. Vielleicht später nochmal vorbeischauen?</p>
-      <button class="reset-btn" onclick="resetAll()">↻ Nochmal von vorne</button>
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- SCREEN: Create Profile                                 -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screenCreateProfile">
+      <div class="auth-box profile-form">
+        <h2>Erstell dein Profil</h2>
+        <p class="auth-sub">Damit andere Zecken dich finden</p>
+        <div class="auth-error" id="profileError"></div>
+        <form id="profileForm" onsubmit="return handleCreateProfile(event)">
+          <div class="form-group">
+            <label>Name (wie er angezeigt wird)</label>
+            <input type="text" id="profName" placeholder="z.B. Karla" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Alter</label>
+              <input type="number" id="profAge" placeholder="25" min="18" max="120">
+            </div>
+            <div class="form-group">
+              <label>Ort</label>
+              <input type="text" id="profLocation" placeholder="z.B. Berlin">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bio</label>
+            <textarea id="profBio" placeholder="Erzähl was von dir…" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Tags (Enter zum Hinzufügen)</label>
+            <div class="tags-input-wrap" id="tagsWrap" onclick="document.getElementById('tagsInput').focus()">
+              <div id="tagsList"></div>
+              <input type="text" id="tagsInput" placeholder="Tag eingeben + Enter" onkeydown="handleTagKey(event)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Emoji</label>
+            <div class="emoji-options" id="emojiOptions"></div>
+          </div>
+          <div class="form-group">
+            <label>Farbe</label>
+            <div class="color-options" id="colorOptions"></div>
+          </div>
+          <button type="submit" class="btn-primary" id="profileBtn">Profil erstellen →</button>
+        </form>
+        <div class="auth-link">
+          <a onclick="showApp()">Später, erstmal swipen →</a>
+        </div>
+      </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="actions" id="actions">
-      <button class="action-btn like" onclick="swipe('like')">❤️</button>
-      <button class="action-btn super" onclick="swipe('super')">⭐</button>
-      <button class="action-btn nope" onclick="swipe('nope')">✕</button>
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- SCREEN: Edit Profile                                   -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screenEditProfile">
+      <div class="auth-box profile-form">
+        <h2>Profil bearbeiten</h2>
+        <p class="auth-sub">Ändere deine Angaben</p>
+        <div class="auth-error" id="editProfileError"></div>
+        <form id="editProfileForm" onsubmit="return handleEditProfile(event)">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="editProfName" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Alter</label>
+              <input type="number" id="editProfAge" min="18" max="120">
+            </div>
+            <div class="form-group">
+              <label>Ort</label>
+              <input type="text" id="editProfLocation">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Bio</label>
+            <textarea id="editProfBio" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Tags</label>
+            <div class="tags-input-wrap" onclick="document.getElementById('editTagsInput').focus()">
+              <div id="editTagsList"></div>
+              <input type="text" id="editTagsInput" placeholder="Tag + Enter" onkeydown="handleEditTagKey(event)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Emoji</label>
+            <div class="emoji-options" id="editEmojiOptions"></div>
+          </div>
+          <div class="form-group">
+            <label>Farbe</label>
+            <div class="color-options" id="editColorOptions"></div>
+          </div>
+          <button type="submit" class="btn-primary" id="editProfileBtn">Speichern →</button>
+        </form>
+        <div class="auth-link">
+          <a onclick="showApp()">← Zurück zum Swipen</a>
+        </div>
+      </div>
     </div>
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- SCREEN: App (Swiping)                                  -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screenApp">
+      <!-- User Bar -->
+      <div class="user-bar" id="userBar">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">🧑</div>
+          <div class="user-name" id="userName">Nicht eingeloggt <small>(Gast)</small></div>
+        </div>
+        <div class="user-actions" id="userActions">
+          <button class="profile-btn" id="profileEditBtn" onclick="openEditProfile()" style="display:none">✏️ Profil</button>
+          <button onclick="showScreen('screenCreateProfile')" id="createProfileBtn" style="display:none">➕ Profil</button>
+          <button class="logout" id="logoutBtn" onclick="handleLogout()" style="display:none">🚪</button>
+          <button onclick="showScreen('screenLogin')" id="loginBtnBar">🔑 Einloggen</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-number" id="likeCount">0</div>
+          <div class="stat-label">Links ❤️</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="matchedCount">0</div>
+          <div class="stat-label">Match ❤️</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="nopeCount">0</div>
+          <div class="stat-label">Rechts 💩</div>
+        </div>
+      </div>
+
+      <!-- Card Deck -->
+      <div class="card-deck" id="cardDeck">
+        <!-- Cards injected by JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="icon">🏕️</div>
+        <h3>Alle abgeswiped!</h3>
+        <p>Keine Zecken mehr in deiner Nähe. Vielleicht später nochmal vorbeischauen?</p>
+        <button class="reset-btn" onclick="resetAll()">↻ Nochmal von vorne</button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions" id="actions">
+        <button class="action-btn like" onclick="swipe('like')">❤️</button>
+        <button class="action-btn super" onclick="swipe('super')">⭐</button>
+        <button class="action-btn nope" onclick="swipe('nope')">✕</button>
+      </div>
+    </div>
+
   </div>
 
   <!-- Match Overlay -->
@@ -546,7 +616,7 @@
     <div class="match-content">
       <div class="match-icon">❤️</div>
       <h2>ES HAT GEFUNKT! 🔥</h2>
-      <p id="matchText">Du und <span id="matchName"></span> — das wird was!</p>
+      <p>Du und <span id="matchName"></span> — das wird was!</p>
       <div>
         <button class="match-btn" onclick="closeMatch()">💬 Nachricht schreiben</button>
         <button class="match-close" onclick="closeMatch()">Weiter swipen</button>
@@ -558,7 +628,297 @@
   <div class="confetti-container" id="confettiContainer"></div>
 
   <script>
-    // ─── State ───────────────────────────────────────────────────
+    // ─── Auth State ──────────────────────────────────────────
+    const TOKEN_KEY = 'zecken_token';
+    let token = localStorage.getItem(TOKEN_KEY);
+    let currentUser = null;
+    let currentProfile = null;
+    let tagsInput = [];
+    let editTagsInputArr = [];
+
+    // ─── API ─────────────────────────────────────────────────
+    async function apiGet(url) {
+      const headers = {};
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const r = await fetch(url, { headers });
+      if (r.status === 401) { token = null; localStorage.removeItem(TOKEN_KEY); }
+      return r.json();
+    }
+    async function apiPost(url, body) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+      if (r.status === 401) { token = null; localStorage.removeItem(TOKEN_KEY); }
+      return r;
+    }
+
+    // ─── Screen Routing ──────────────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // ─── Auth ─────────────────────────────────────────────────
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('loginError');
+      errEl.classList.remove('show');
+      try {
+        const r = await apiPost('/api/login', {
+          username: document.getElementById('loginUsername').value,
+          password: document.getElementById('loginPassword').value
+        });
+        const data = await r.json();
+        if (!r.ok) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+        token = data.token;
+        localStorage.setItem(TOKEN_KEY, token);
+        await loadUser();
+        showApp();
+      } finally {
+        btn.disabled = false; btn.textContent = 'Einloggen →';
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('registerError');
+      errEl.classList.remove('show');
+      try {
+        const r = await apiPost('/api/register', {
+          username: document.getElementById('regUsername').value,
+          email: document.getElementById('regEmail').value,
+          password: document.getElementById('regPassword').value
+        });
+        const data = await r.json();
+        if (!r.ok) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+        token = data.token;
+        localStorage.setItem(TOKEN_KEY, token);
+        await loadUser();
+        if (currentProfile) {
+          showApp();
+        } else {
+          initProfileForm();
+          showScreen('screenCreateProfile');
+        }
+      } finally {
+        btn.disabled = false; btn.textContent = 'Registrieren →';
+      }
+    }
+
+    async function loadUser() {
+      if (!token) return;
+      try {
+        const data = await apiGet('/api/me');
+        if (data.user) {
+          currentUser = data.user;
+          currentProfile = data.profile;
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    function handleLogout() {
+      token = null;
+      localStorage.removeItem(TOKEN_KEY);
+      currentUser = null;
+      currentProfile = null;
+      updateUserBar();
+      showScreen('screenLogin');
+    }
+
+    // ─── User Bar ─────────────────────────────────────────────
+    function updateUserBar() {
+      const avatar = document.getElementById('userAvatar');
+      const name = document.getElementById('userName');
+      const editBtn = document.getElementById('profileEditBtn');
+      const createBtn = document.getElementById('createProfileBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const loginBtnBar = document.getElementById('loginBtnBar');
+
+      if (currentUser) {
+        const emoji = currentProfile ? currentProfile.emoji || '🧑' : '🧑';
+        avatar.textContent = emoji;
+        name.innerHTML = `${currentUser.username} <small>(${currentProfile ? currentProfile.name : 'kein Profil'})</small>`;
+        editBtn.style.display = currentProfile ? 'inline-block' : 'none';
+        createBtn.style.display = currentProfile ? 'none' : 'inline-block';
+        logoutBtn.style.display = 'inline-block';
+        loginBtnBar.style.display = 'none';
+      } else {
+        avatar.textContent = '🧑';
+        name.innerHTML = 'Nicht eingeloggt <small>(Gast)</small>';
+        editBtn.style.display = 'none';
+        createBtn.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        loginBtnBar.style.display = 'inline-block';
+      }
+    }
+
+    // ─── Profile Creation ─────────────────────────────────────
+    const EMOJIS = ['🧑', '🎓', '🎸', '🎨', '🎙️', '🚲', '💻', '🐱', '🌯', '🎵', '🪚', '📚', '🎭', '💚', '✊', '🌻'];
+    const COLORS = ['#e84118', '#2ecc71', '#9b59b6', '#3498db', '#f1c40f', '#e74c3c', '#e67e22', '#1abc9c', '#e84393', '#00b894', '#fd79a8', '#6c5ce7'];
+
+    function initEmojiColors(emojiContainerId, colorContainerId, selectedEmoji, selectedColor, emojiInputId, colorInputId) {
+      const ec = document.getElementById(emojiContainerId);
+      const cc = document.getElementById(colorContainerId);
+      if (!ec || !cc) return;
+
+      ec.innerHTML = '';
+      EMOJIS.forEach(e => {
+        const span = document.createElement('span');
+        span.textContent = e;
+        if (e === selectedEmoji) span.classList.add('selected');
+        span.onclick = () => {
+          ec.querySelectorAll('span').forEach(s => s.classList.remove('selected'));
+          span.classList.add('selected');
+          document.getElementById(emojiInputId).value = e;
+        };
+        ec.appendChild(span);
+      });
+
+      cc.innerHTML = '';
+      COLORS.forEach(c => {
+        const span = document.createElement('span');
+        span.style.background = c;
+        if (c === selectedColor) span.classList.add('selected');
+        span.onclick = () => {
+          cc.querySelectorAll('span').forEach(s => s.classList.remove('selected'));
+          span.classList.add('selected');
+          document.getElementById(colorInputId).value = c;
+        };
+        cc.appendChild(span);
+      });
+    }
+
+    function initProfileForm() {
+      initEmojiColors('emojiOptions', 'colorOptions', '🧑', '#e84118', 'profEmoji', 'profColor');
+      tagsInput = [];
+      renderTags();
+      document.getElementById('profName').value = '';
+      document.getElementById('profAge').value = '';
+      document.getElementById('profLocation').value = '';
+      document.getElementById('profBio').value = '';
+    }
+
+    function handleTagKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const input = document.getElementById('tagsInput');
+        const val = input.value.trim();
+        if (val && !tagsInput.includes(val)) {
+          tagsInput.push(val);
+          renderTags();
+        }
+        input.value = '';
+      }
+    }
+
+    function renderTags() {
+      const list = document.getElementById('tagsList');
+      list.innerHTML = tagsInput.map(t =>
+        `<span class="tag">${t}<span class="tag-del" onclick="tagsInput.splice(${tagsInput.indexOf(t)},1);renderTags()">×</span></span>`
+      ).join('');
+    }
+
+    function handleEditTagKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const input = document.getElementById('editTagsInput');
+        const val = input.value.trim();
+        if (val && !editTagsInputArr.includes(val)) {
+          editTagsInputArr.push(val);
+          renderEditTags();
+        }
+        input.value = '';
+      }
+    }
+
+    function renderEditTags() {
+      const list = document.getElementById('editTagsList');
+      list.innerHTML = editTagsInputArr.map(t =>
+        `<span class="tag">${t}<span class="tag-del" onclick="editTagsInputArr.splice(${editTagsInputArr.indexOf(t)},1);renderEditTags()">×</span></span>`
+      ).join('');
+    }
+
+    async function handleCreateProfile(e) {
+      e.preventDefault();
+      const btn = document.getElementById('profileBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('profileError');
+      errEl.classList.remove('show');
+      try {
+        const r = await apiPost('/api/profile', {
+          name: document.getElementById('profName').value,
+          age: parseInt(document.getElementById('profAge').value) || 25,
+          location: document.getElementById('profLocation').value,
+          bio: document.getElementById('profBio').value,
+          tags: tagsInput,
+          emoji: document.querySelector('#emojiOptions .selected')?.textContent || '🧑',
+          color: document.querySelector('#colorOptions .selected')?.style?.background || '#e84118'
+        });
+        if (!r.ok) {
+          const data = await r.json();
+          errEl.textContent = data.error; errEl.classList.add('show');
+          return;
+        }
+        await loadUser();
+        showApp();
+      } finally {
+        btn.disabled = false; btn.textContent = 'Profil erstellen →';
+      }
+    }
+
+    // ─── Edit Profile ─────────────────────────────────────────
+    async function openEditProfile() {
+      if (!currentProfile) return;
+      editTagsInputArr = JSON.parse(JSON.stringify(currentProfile.tags || []));
+      renderEditTags();
+      document.getElementById('editProfName').value = currentProfile.name || '';
+      document.getElementById('editProfAge').value = currentProfile.age || '';
+      document.getElementById('editProfLocation').value = currentProfile.location || '';
+      document.getElementById('editProfBio').value = currentProfile.bio || '';
+      initEmojiColors('editEmojiOptions', 'editColorOptions',
+        currentProfile.emoji || '🧑', currentProfile.color || '#e84118',
+        'editProfEmoji', 'editProfColor');
+      showScreen('screenEditProfile');
+    }
+
+    async function handleEditProfile(e) {
+      e.preventDefault();
+      const btn = document.getElementById('editProfileBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('editProfileError');
+      errEl.classList.remove('show');
+      try {
+        const r = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({
+            name: document.getElementById('editProfName').value,
+            age: parseInt(document.getElementById('editProfAge').value) || 25,
+            location: document.getElementById('editProfLocation').value,
+            bio: document.getElementById('editProfBio').value,
+            tags: editTagsInputArr,
+            emoji: document.querySelector('#editEmojiOptions .selected')?.textContent || '🧑',
+            color: document.querySelector('#editColorOptions .selected')?.style?.background || '#e84118'
+          })
+        });
+        if (!r.ok) {
+          const data = await r.json();
+          errEl.textContent = data.error; errEl.classList.add('show');
+          return;
+        }
+        await loadUser();
+        updateUserBar();
+        showApp();
+      } finally {
+        btn.disabled = false; btn.textContent = 'Speichern →';
+      }
+    }
+
+    // ─── App (Swiping) ────────────────────────────────────────
     let PROFILES = [];
     let currentIndex = 0;
     let totalProfiles = 0;
@@ -569,16 +929,6 @@
     let isAnimating = false;
     let swipeState = null;
 
-    // ─── API Helpers ─────────────────────────────────────────────
-    async function apiGet(url) {
-      const r = await fetch(url);
-      return r.json();
-    }
-    async function apiPost(url, body) {
-      await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    }
-
-    // ─── Init ───────────────────────────────────────────────────
     async function init() {
       const data = await apiGet('/api/profiles');
       PROFILES = data.profiles;
@@ -597,7 +947,6 @@
       updateStats();
     }
 
-    // ─── Render Cards ────────────────────────────────────────────
     function renderCards() {
       const deck = document.getElementById('cardDeck');
       deck.innerHTML = '';
@@ -617,9 +966,7 @@
       const profile = PROFILES[currentIndex];
       const nextProfile = PROFILES[currentIndex + 1];
 
-      if (nextProfile) {
-        deck.appendChild(createCardElement(nextProfile, 'next'));
-      }
+      if (nextProfile) deck.appendChild(createCardElement(nextProfile, 'next'));
       deck.appendChild(createCardElement(profile, 'current'));
 
       setupDrag();
@@ -629,9 +976,13 @@
       const div = document.createElement('div');
       div.className = `card ${className}`;
 
+      const isUser = profile.isUserProfile;
+      const photo = profile.photo || `https://i.pravatar.cc/400?u=${profile.name.toLowerCase()}@zecken-tinder.de`;
+
       div.innerHTML = `
-        <div class="card-avatar" style="background-image: url('${profile.photo}'); background-size: cover; background-position: center;">
+        <div class="card-avatar" style="background-image: url('${photo}'); background-size: cover; background-position: center;">
           <div class="avatar-gradient" style="background: linear-gradient(135deg, ${profile.color}33, ${profile.color}11);"></div>
+          ${isUser ? '<div class="is-user-badge">👤 Eigenes Profil</div>' : ''}
           <div class="swipe-indicator nope">💩 NOPE</div>
           <div class="swipe-indicator like">❤️ MATCH</div>
         </div>
@@ -642,7 +993,7 @@
           </div>
           <div class="card-location">📍 ${profile.location}</div>
           <div class="card-tags">
-            ${profile.tags.map((tag, i) => {
+            ${(profile.tags || []).map((tag, i) => {
               const cls = i % 3 === 0 ? 'green' : i % 3 === 1 ? 'purple' : '';
               return `<span class="card-tag ${cls}">${tag}</span>`;
             }).join('')}
@@ -654,11 +1005,10 @@
           </div>
         </div>
       `;
-
       return div;
     }
 
-    // ─── Drag to Swipe — Unified (Pointer or Touch, never both) ──
+    // ─── Drag to Swipe ────────────────────────────────────────
     function setupDrag() {
       const card = document.querySelector('.card.current');
       if (!card) return;
@@ -751,7 +1101,7 @@
       }
     }
 
-    // ─── Swipe Actions (Buttons) ─────────────────────────────────
+    // ─── Swipe Actions ────────────────────────────────────────
     function swipe(type) {
       if (isAnimating) return;
       const card = document.querySelector('.card.current');
@@ -764,26 +1114,20 @@
     function animateSwipe(card, direction, type) {
       if (isAnimating) return;
       isAnimating = true;
-
       const dist = direction === 'up' ? 500 : 600;
       const x = direction === 'left' ? -dist : direction === 'right' ? dist : 0;
       const y = direction === 'up' ? -dist : 50;
       const rotate = direction === 'left' ? -30 : direction === 'right' ? 30 : 0;
-
       card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
       card.style.transform = `translate(${x}px, ${y}px) rotate(${rotate}deg)`;
       card.style.opacity = '0';
-
       const profileIdx = currentIndex;
-
       setTimeout(async () => {
         await apiPost('/api/swipe', { profileIdx, type });
-
         if (type === 'like' || type === 'super') {
           showMatch(PROFILES[profileIdx]);
           spawnConfetti();
         }
-
         currentIndex++;
         await loadStats();
         renderCards();
@@ -791,17 +1135,16 @@
       }, 400);
     }
 
-    // ─── Match Modal ────────────────────────────────────────────
+    // ─── Match Modal ──────────────────────────────────────────
     function showMatch(profile) {
       document.getElementById('matchName').textContent = profile.name;
       document.getElementById('matchOverlay').classList.add('show');
     }
-
     function closeMatch() {
       document.getElementById('matchOverlay').classList.remove('show');
     }
 
-    // ─── Confetti ───────────────────────────────────────────────
+    // ─── Confetti ─────────────────────────────────────────────
     function spawnConfetti() {
       const container = document.getElementById('confettiContainer');
       const colors = ['#e84118', '#2ecc71', '#3498db', '#f1c40f', '#9b59b6', '#e84393', '#1abc9c', '#fd79a8'];
@@ -821,29 +1164,53 @@
       }
     }
 
-    // ─── Stats ──────────────────────────────────────────────────
+    // ─── Stats ───────────────────────────────────────────────
     function updateStats() {
       document.getElementById('matchedCount').textContent = matchedProfiles.length;
       document.getElementById('nopeCount').textContent = nopes;
       document.getElementById('likeCount').textContent = likes;
     }
 
-    // ─── Reset ──────────────────────────────────────────────────
+    // ─── Reset ───────────────────────────────────────────────
     async function resetAll() {
       await apiPost('/api/reset', {});
       await init();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // ─── Keyboard shortcuts ─────────────────────────────────────
+    // ─── Show App ─────────────────────────────────────────────
+    function showApp() {
+      updateUserBar();
+      showScreen('screenApp');
+      init();
+    }
+
+    // ─── Keyboard shortcuts ──────────────────────────────────
     document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('screenApp').classList.contains('active')) return;
       if (e.key === 'ArrowLeft') swipe('like');
       if (e.key === 'ArrowRight') swipe('nope');
       if (e.key === 'ArrowUp') swipe('super');
     });
 
-    // ─── Go! ────────────────────────────────────────────────────
-    init();
+    // ─── Bootstrap ────────────────────────────────────────────
+    (async function boot() {
+      if (token) {
+        await loadUser();
+        if (currentUser) {
+          if (currentProfile) {
+            updateUserBar();
+            showScreen('screenApp');
+            init();
+          } else {
+            initProfileForm();
+            showScreen('screenCreateProfile');
+          }
+          return;
+        }
+      }
+      showScreen('screenLogin');
+    })();
   </script>
 </body>
 </html>
