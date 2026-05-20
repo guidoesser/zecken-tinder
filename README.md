@@ -1,4 +1,4 @@
-# Zecken Tinder 💚🐝
+# Zecken Tinder 💚
 
 **Tinder für linksgrünversiffte Herzen.**
 
