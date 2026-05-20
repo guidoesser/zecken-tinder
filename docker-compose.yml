@@ -1,0 +1,22 @@
+services:
+  zecken-tinder:
+    build: .
+    container_name: zecken-tinder
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - SERVER_BASE=http://localhost:3001
+      - DB_PATH=/app/data/zecken.db
+    volumes:
+      - zecken-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  zecken-data:
