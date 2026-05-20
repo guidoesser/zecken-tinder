@@ -4,12 +4,20 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+// ─── Config ──────────────────────────────────────────────────────
+const SERVER_BASE = process.env.SERVER_BASE || 'http://185.194.218.98:3001';
+const getSmtpConfig = () => {
+  const raw = db.prepare("SELECT value FROM settings WHERE key='smtp_config'").pluck().get();
+  return raw ? JSON.parse(raw) : null;
+};
 
 // ─── Database ────────────────────────────────────────────────────
 const db = new Database(path.join(__dirname, 'zecken.db'));
@@ -46,16 +54,20 @@ db.exec(`
     color      TEXT DEFAULT '#e84118',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS email_verifications (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id),
+    token      TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // ─── Schema Migration for Existing DBs ──────────────────────────
-// Add user_id to swipes if it doesn't exist (pre-v3 databases)
 const swipesCols = db.prepare("PRAGMA table_info('swipes')").all().map(c => c.name);
 if (!swipesCols.includes('user_id')) {
   db.exec("ALTER TABLE swipes ADD COLUMN user_id INTEGER REFERENCES users(id)");
   console.log('  ↳ Migration: user_id added to swipes');
 }
-// Add email/password_hash if users table was created by an older schema
 const usersCols = db.prepare("PRAGMA table_info('users')").all().map(c => c.name);
 if (!usersCols.includes('email')) {
   db.exec("ALTER TABLE users ADD COLUMN email TEXT UNIQUE NOT NULL DEFAULT ''");
@@ -64,6 +76,12 @@ if (!usersCols.includes('email')) {
 if (!usersCols.includes('password_hash')) {
   db.exec("ALTER TABLE users ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''");
   console.log('  ↳ Migration: password_hash added to users');
+}
+if (!usersCols.includes('email_verified')) {
+  db.exec("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0");
+  // Mark all existing users as verified (pre-verification era)
+  db.exec("UPDATE users SET email_verified=1");
+  console.log('  ↳ Migration: email_verified added to users (existing users verified)');
 }
 
 // ─── JWT Secret ──────────────────────────────────────────────────
@@ -127,6 +145,61 @@ function enrichProfile(p, isUserProfile = false) {
   };
 }
 
+// ─── Email Verification ──────────────────────────────────────────
+function sendVerificationEmail(userId, email, username) {
+  const smtp = getSmtpConfig();
+  if (!smtp) {
+    console.log(`  ⚠ Kein SMTP konfiguriert — keine Mail an ${email} gesendet`);
+    return false;
+  }
+
+  // Generate or reuse token
+  let row = db.prepare('SELECT token FROM email_verifications WHERE user_id=?').get(userId);
+  let token;
+  if (row) {
+    token = row.token;
+  } else {
+    token = crypto.randomBytes(32).toString('hex');
+    db.prepare('INSERT INTO email_verifications (user_id, token) VALUES (?, ?)').run(userId, token);
+  }
+
+  const link = `${SERVER_BASE}/api/verify?token=${token}`;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtp.host,
+      port: smtp.port,
+      secure: smtp.secure || false,
+      auth: { user: smtp.user, pass: smtp.pass },
+    });
+    transporter.sendMail({
+      from: smtp.from,
+      to: email,
+      subject: 'Zecken-Tinder — Email bestätigen',
+      text: `Hallo ${username || email},\n\nbestätige deine Email-Adresse für Zecken-Tinder:\n${link}\n\n❤️ Deine Zecken-Tinder Crew`,
+      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#1a1a2e;border-radius:24px;color:#fff;text-align:center;">
+        <h1 style="font-size:32px;color:#e84118;">✓ Zecken-Tinder</h1>
+        <p style="font-size:16px;margin:24px 0;color:rgba(255,255,255,0.7);">Hallo <strong>${username || email}</strong>,<br>klick den Button um deine Email zu bestätigen:</p>
+        <a href="${link}" style="display:inline-block;padding:14px 40px;border-radius:50px;background:linear-gradient(135deg,#e84118,#c0392b);color:#fff;font-size:16px;font-weight:700;text-decoration:none;">Email bestätigen ❤️</a>
+        <p style="font-size:13px;margin-top:24px;color:rgba(255,255,255,0.35);">Oder kopiere diesen Link:<br>${link}</p>
+      </div>`,
+    });
+    console.log(`  ✓ Verifikations-Mail an ${email} gesendet`);
+    return true;
+  } catch (e) {
+    console.error(`  ✗ Fehler beim Senden der Mail an ${email}:`, e.message);
+    return false;
+  }
+}
+
+function emailVerifiedMiddleware(req, res, next) {
+  const user = db.prepare('SELECT email_verified FROM users WHERE id=?').get(req.userId);
+  if (!user || !user.email_verified) {
+    return res.status(403).json({ error: 'Email nicht bestätigt', needsVerification: true });
+  }
+  next();
+}
+
 function getAllProfiles() {
   // hardcoded profiles
   const hardcoded = HARDCODED_PROFILES.map((p, i) => enrichProfile({ ...p, idx: i }));
@@ -148,7 +221,7 @@ function getAllProfiles() {
 
 // ─── Auth Routes ──────────────────────────────────────────────────
 
-// POST /api/register — create account
+// POST /api/register — create account (needs email verification)
 app.post('/api/register', (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
@@ -159,9 +232,19 @@ app.post('/api/register', (req, res) => {
   }
   try {
     const hash = bcrypt.hashSync(password, 10);
-    const result = db.prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)').run(username, email, hash);
-    const token = jwt.sign({ userId: result.lastInsertRowid }, jwtSecret, { expiresIn: '30d' });
-    res.json({ token, user: { id: result.lastInsertRowid, username, email } });
+    const result = db.prepare('INSERT INTO users (username, email, password_hash, email_verified) VALUES (?, ?, ?, 0)').run(username, email, hash);
+    const userId = result.lastInsertRowid;
+    const token = jwt.sign({ userId }, jwtSecret, { expiresIn: '30d' });
+    // Send verification email (silent if no SMTP)
+    const sent = sendVerificationEmail(userId, email, username);
+    res.json({
+      token,
+      user: { id: userId, username, email, emailVerified: false },
+      emailSent: sent,
+      message: sent
+        ? 'Check deine Mails — Link zur Bestätigung ist unterwegs!'
+        : 'Registrierung erfolgreich! (SMTP nicht konfiguriert — frag den Admin)'
+    });
   } catch (e) {
     if (e.message.includes('UNIQUE constraint')) {
       return res.status(409).json({ error: 'Username oder Email bereits vergeben' });
@@ -181,16 +264,100 @@ app.post('/api/login', (req, res) => {
     return res.status(401).json({ error: 'Falscher Username oder Passwort' });
   }
   const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: '30d' });
-  res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+  res.json({
+    token,
+    user: { id: user.id, username: user.username, email: user.email, emailVerified: !!user.email_verified },
+    needsVerification: !user.email_verified
+  });
 });
 
-// GET /api/me — current user info + profile
+// GET /api/me — current user info + profile + verification status
 app.get('/api/me', authMiddleware, (req, res) => {
-  const user = db.prepare('SELECT id, username, email, created_at FROM users WHERE id = ?').get(req.userId);
+  const user = db.prepare('SELECT id, username, email, email_verified, created_at FROM users WHERE id = ?').get(req.userId);
   if (!user) return res.status(404).json({ error: 'User nicht gefunden' });
   const profile = db.prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(req.userId);
-  res.json({ user, profile: profile ? { ...profile, tags: JSON.parse(profile.tags || '[]') } : null });
+  res.json({
+    user: { ...user, emailVerified: !!user.email_verified },
+    profile: profile ? { ...profile, tags: JSON.parse(profile.tags || '[]') } : null
+  });
 });
+
+// ─── Email Verification Routes ──────────────────────────────────
+
+// GET /api/verify — verify email via token link
+app.get('/api/verify', (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).send('Fehlender Token');
+
+  const row = db.prepare('SELECT * FROM email_verifications WHERE token=?').get(token);
+  if (!row) return res.status(404).send(`
+    <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+    <div style="text-align:center;"><h1 style="color:#e74c3c;">✗</h1><p>Ungültiger oder abgelaufener Link.</p></div></body></html>`);
+
+  db.exec('UPDATE users SET email_verified=1 WHERE id=' + row.user_id);
+  db.exec('DELETE FROM email_verifications WHERE token=' + JSON.stringify(token));
+
+  res.send(`
+    <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+    <div style="text-align:center;">
+      <h1 style="font-size:64px;color:#2ecc71;">✓</h1>
+      <h2 style="margin:16px 0;">Email bestätigt! ❤️</h2>
+      <p style="color:rgba(255,255,255,0.6);margin-bottom:24px;">Du kannst dich jetzt einloggen und losswipen.</p>
+      <a href="${SERVER_BASE}" style="display:inline-block;padding:14px 40px;border-radius:50px;background:linear-gradient(135deg,#e84118,#c0392b);color:#fff;font-size:16px;font-weight:700;text-decoration:none;">Zur App →</a>
+    </div></body></html>`);
+});
+
+// POST /api/resend-verification — resend verification email
+app.post('/api/resend-verification', authMiddleware, (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id=?').get(req.userId);
+  if (!user) return res.status(404).json({ error: 'User nicht gefunden' });
+  if (user.email_verified) return res.json({ message: 'Email bereits bestätigt' });
+
+  const sent = sendVerificationEmail(req.userId, user.email, user.username);
+  if (sent) {
+    res.json({ message: 'Bestätigungs-Mail wurde gesendet!' });
+  } else {
+    res.status(500).json({ error: 'Konnte keine Mail senden — SMTP nicht konfiguriert' });
+  }
+});
+
+// GET /api/verify-status — check if SMTP is configured
+app.get('/api/verify-status', authMiddleware, (req, res) => {
+  const user = db.prepare('SELECT email_verified FROM users WHERE id=?').get(req.userId);
+  const smtp = getSmtpConfig();
+  res.json({
+    emailVerified: !!user?.email_verified,
+    smtpConfigured: !!smtp
+  });
+});
+
+// POST /api/setup-smtp — configure SMTP (requires env token)
+app.post('/api/setup-smtp', (req, res) => {
+  // Protected by a setup token in settings
+  const { host, port, user, pass, from, setupKey } = req.body;
+  const expectedKey = db.prepare("SELECT value FROM settings WHERE key='setup_key'").pluck().get();
+  if (!expectedKey || setupKey !== expectedKey) {
+    return res.status(403).json({ error: 'Ungültiger Setup-Key' });
+  }
+  if (!host || !port || !user || !pass || !from) {
+    return res.status(400).json({ error: 'host, port, user, pass, from sind erforderlich' });
+  }
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('smtp_config', ?)")
+    .run(JSON.stringify({ host, port: parseInt(port), secure: port === 465, user, pass, from }));
+  res.json({ message: 'SMTP konfiguriert!' });
+});
+
+// GET /api/setup-key — one-time setup key (shown in server logs)
+// The setup key is generated on first run if not present
+const setupKey = db.prepare("SELECT value FROM settings WHERE key='setup_key'").pluck().get();
+if (!setupKey) {
+  const key = crypto.randomBytes(8).toString('hex');
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('setup_key', ?)").run(key);
+  console.log(`\n  ┌────────────────────────────────────────────┐`);
+  console.log(`  │ SMTP-Setup-Key: ${key}              │`);
+  console.log(`  │ POST /api/setup-smtp mit diesem Key     │`);
+  console.log(`  └────────────────────────────────────────────┘\n`);
+}
 
 // ─── Profile Routes ───────────────────────────────────────────────
 
@@ -257,8 +424,8 @@ app.get('/api/profile', authMiddleware, (req, res) => {
 
 // ─── Swipe Routes ─────────────────────────────────────────────────
 
-// GET /api/profiles — shuffled order, with current index (auth required)
-app.get('/api/profiles', authMiddleware, (req, res) => {
+// GET /api/profiles — shuffled order, with current index (auth + verified required)
+app.get('/api/profiles', authMiddleware, emailVerifiedMiddleware, (req, res) => {
   const allProfiles = getAllProfiles();
   const orderStr = db.prepare("SELECT value FROM settings WHERE key='shuffled_order'").pluck().get();
   let order = JSON.parse(orderStr || '[]');
@@ -275,8 +442,8 @@ app.get('/api/profiles', authMiddleware, (req, res) => {
   res.json({ profiles: shuffled, currentIndex, total: allProfiles.length });
 });
 
-// POST /api/swipe — record a swipe (auth required)
-app.post('/api/swipe', authMiddleware, (req, res) => {
+// POST /api/swipe — record a swipe (auth + verified required)
+app.post('/api/swipe', authMiddleware, emailVerifiedMiddleware, (req, res) => {
   const { profileIdx, type } = req.body;
   if (profileIdx === undefined || !['like', 'nope', 'super'].includes(type)) {
     return res.status(400).json({ error: 'profileIdx + type required (like/nope/super)' });
@@ -289,8 +456,8 @@ app.post('/api/swipe', authMiddleware, (req, res) => {
   res.json({ ok: true });
 });
 
-// GET /api/stats — user-specific aggregated stats (auth required)
-app.get('/api/stats', authMiddleware, (req, res) => {
+// GET /api/stats — user-specific aggregated stats (auth + verified required)
+app.get('/api/stats', authMiddleware, emailVerifiedMiddleware, (req, res) => {
   const stats = db.prepare(`
     SELECT type, COUNT(*) as count FROM swipes WHERE user_id=? GROUP BY type
   `).all(req.userId);
@@ -307,8 +474,8 @@ app.get('/api/stats', authMiddleware, (req, res) => {
   res.json({ likes, nopes, supers, totalSwipes: likes + nopes + supers, matchedProfiles });
 });
 
-// POST /api/reset — delete your swipes + reshuffle
-app.post('/api/reset', authMiddleware, (req, res) => {
+// POST /api/reset — delete your swipes + reshuffle (auth + verified required)
+app.post('/api/reset', authMiddleware, emailVerifiedMiddleware, (req, res) => {
   const allProfiles = getAllProfiles();
   db.prepare('DELETE FROM swipes WHERE user_id=?').run(req.userId);
   const newOrder = [...Array(allProfiles.length).keys()].sort(() => Math.random() - 0.5);

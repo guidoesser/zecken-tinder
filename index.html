@@ -552,6 +552,28 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════════ -->
+    <!-- SCREEN: Verify Email                                   -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="screen" id="screenVerifyEmail">
+      <div class="auth-box" style="text-align:center;">
+        <h2>Email bestätigen ✉️</h2>
+        <p class="auth-sub" id="verifyText">Wir haben eine Bestätigungs-Mail an deine Adresse gesendet.</p>
+        <div style="margin:24px 0;">
+          <div style="font-size:64px;margin-bottom:16px;">📬</div>
+          <p style="color:rgba(255,255,255,0.5);font-size:14px;line-height:1.6;" id="verifyDesc">
+            Klick den Link in der Mail — danach kannst du losswipen!<br>
+            Check auch deinen Spam-Ordner.
+          </p>
+        </div>
+        <div class="auth-error" id="verifyEmailError"></div>
+        <button class="btn-primary" id="resendBtn" onclick="resendVerification()">Mail erneut senden</button>
+        <div class="auth-link" style="margin-top:20px;">
+          <a onclick="handleLogout()">← Abbrechen</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════ -->
     <!-- SCREEN: App (Swiping)                                  -->
     <!-- ════════════════════════════════════════════════════════ -->
     <div class="screen" id="screenApp">
@@ -668,8 +690,17 @@
         if (!r.ok) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
         token = data.token;
         localStorage.setItem(TOKEN_KEY, token);
+        currentUser = data.user;
+        currentProfile = null;
         await loadUser();
-        showApp();
+        if (data.needsVerification) {
+          showScreen('screenVerifyEmail');
+        } else if (currentProfile) {
+          showApp();
+        } else {
+          initProfileForm();
+          showScreen('screenCreateProfile');
+        }
       } finally {
         btn.disabled = false; btn.textContent = 'Einloggen →';
       }
@@ -691,13 +722,8 @@
         if (!r.ok) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
         token = data.token;
         localStorage.setItem(TOKEN_KEY, token);
-        await loadUser();
-        if (currentProfile) {
-          showApp();
-        } else {
-          initProfileForm();
-          showScreen('screenCreateProfile');
-        }
+        currentUser = data.user;
+        await showVerifyOrApp();
       } finally {
         btn.disabled = false; btn.textContent = 'Registrieren →';
       }
@@ -1171,6 +1197,46 @@
       init();
     }
 
+    // ─── Show Verify or App ───────────────────────────────────
+    async function showVerifyOrApp() {
+      await loadUser();
+      if (!currentUser) { showScreen('screenLogin'); return; }
+      if (!currentUser.emailVerified) {
+        showScreen('screenVerifyEmail');
+      } else if (currentProfile) {
+        showApp();
+      } else {
+        initProfileForm();
+        showScreen('screenCreateProfile');
+      }
+    }
+
+    // ─── Resend Verification ──────────────────────────────────
+    async function resendVerification() {
+      const btn = document.getElementById('resendBtn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const errEl = document.getElementById('verifyEmailError');
+      errEl.classList.remove('show');
+      try {
+        const r = await fetch('/api/resend-verification', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await r.json();
+        if (data.error) {
+          errEl.textContent = data.error;
+          errEl.classList.add('show');
+        } else {
+          document.getElementById('verifyText').textContent = '✅ Mail wurde gesendet!';
+          setTimeout(() => {
+            document.getElementById('verifyText').textContent = 'Wir haben eine Bestätigungs-Mail an deine Adresse gesendet.';
+          }, 3000);
+        }
+      } finally {
+        btn.disabled = false; btn.textContent = 'Mail erneut senden';
+      }
+    }
+
     // ─── Keyboard shortcuts ──────────────────────────────────
     document.addEventListener('keydown', (e) => {
       if (!document.getElementById('screenApp').classList.contains('active')) return;
@@ -1184,14 +1250,18 @@
       if (token) {
         await loadUser();
         if (currentUser) {
+          if (!currentUser.emailVerified) {
+            showScreen('screenVerifyEmail');
+            return;
+          }
           if (currentProfile) {
             updateUserBar();
             showScreen('screenApp');
             init();
-          } else {
-            initProfileForm();
-            showScreen('screenCreateProfile');
+            return;
           }
+          initProfileForm();
+          showScreen('screenCreateProfile');
           return;
         }
       }
