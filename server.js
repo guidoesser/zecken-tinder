@@ -392,7 +392,7 @@ app.get('/api/verify', (req, res) => {
     <div style="text-align:center;"><h1 style="color:#e74c3c;">✗</h1><p>Ungültiger oder abgelaufener Link.</p></div></body></html>`);
 
   db.exec('UPDATE users SET email_verified=1 WHERE id=' + row.user_id);
-  db.exec('DELETE FROM email_verifications WHERE token=' + JSON.stringify(token));
+  db.prepare('DELETE FROM email_verifications WHERE token=?').run(row.token);
 
   res.send(`
     <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
